@@ -9,6 +9,9 @@
   >
     <ion-content>
       <ion-list lines="none">
+        <ion-item>
+          <ion-img :src="selectedMedia?.first?.thumbUrl" />
+        </ion-item>
         <ion-item
           v-if="!selectedMedia.hasFavouriteOnly"
           :button="true"
@@ -151,7 +154,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { IonPopover, IonContent, IonList, IonItem, IonIcon, IonLabel } from '@ionic/vue';
+import { IonPopover, IonContent, IonList, IonItem, IonIcon, IonLabel, IonImg } from '@ionic/vue';
 import {
   heartOutline,
   heartDislikeOutline,
@@ -212,3 +215,15 @@ const deleteHandler = async (event: { detail: { role: string } }): Promise<void>
   emit('delete');
 };
 </script>
+
+<style>
+.media-context-popover {
+  ion-img {
+    width: 100%;
+    height: auto;
+    max-height: 170px;
+    object-fit: contain;
+    aspect-ratio: 1 / 1;
+  }
+}
+</style>

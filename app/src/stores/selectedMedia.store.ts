@@ -8,6 +8,7 @@ export const useSelectedMediaStore = defineStore('selectedMedia', {
   getters: {
     ids: (state) => state.selectedMedias.map((media) => media.id),
     all: (state) => state.selectedMedias,
+    first: (state) => (state.selectedMedias.length > 0 ? state.selectedMedias[0] : null),
 
     hasPublicOnly: (state) => state.selectedMedias.length > 0 && state.selectedMedias.every((media) => media.isPublic),
     hasNonPublicOnly: (state) =>
