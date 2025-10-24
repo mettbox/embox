@@ -1,0 +1,17 @@
+@font-face {
+  font-family: 'story';
+  src: url('./../assets/PoorStory-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+html,
+body {
+  touch-action: manipulation; /* oder pan-x pan-y */
+}
+
+.ios {
+  .footer {
+    padding-bottom: var(--ion-padding-double) !important;
+  }
+}

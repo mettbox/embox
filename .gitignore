@@ -1,0 +1,10 @@
+tmp/
+
+/data/*
+!/data/
+
+/api/media/*
+!/api/media/
+/api/.logs
+
+.env

@@ -1,0 +1,44 @@
+{
+  "name": "embox",
+  "description": "A media management app using luckycloud.de",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "VITE_API_URL=http://192.168.178.194:2705 vite --host",
+    "build": "vue-tsc && VITE_API_URL=https://em.mettbox.de/api vite build",
+    "preview": "VITE_API_URL=http://192.168.178.184:2705 vite preview --host",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "format": "prettier --write src/"
+  },
+  "dependencies": {
+    "@ionic/vue": "^8.0.0",
+    "@ionic/vue-router": "^8.0.0",
+    "@types/js-cookie": "^3.0.6",
+    "exifr": "^7.1.3",
+    "ionicons": "^8.0.0",
+    "js-cookie": "^3.0.5",
+    "pinia": "^3.0.3",
+    "vue": "^3.3.0",
+    "vue-i18n": "^11.1.12",
+    "vue-router": "^4.2.0",
+    "vue-virtual-scroller": "^2.0.0-beta.8",
+    "vue3-carousel": "^0.16.0",
+    "zoompinch": "^0.0.48"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.0.0",
+    "@vue/eslint-config-typescript": "^12.0.0",
+    "eslint": "^8.35.0",
+    "eslint-plugin-vue": "^9.9.0",
+    "prettier": "^3.6.2",
+    "terser": "^5.4.0",
+    "typescript": "~5.6.2",
+    "vite": "~5.2.0",
+    "vite-plugin-pwa": "^1.0.3",
+    "vue-tsc": "^2.1.10"
+  },
+  "overrides": {
+    "rollup": "4.44.0"
+  }
+}
