@@ -61,7 +61,7 @@ const form = reactive<AlbumForm>({
   id: props.album?.id,
   name: props.album?.name || '',
   description: props.album?.description || '',
-  isPublic: props.album?.isPublic || false,
+  isPublic: props.album?.isPublic || true,
 });
 
 const { t } = useI18n();

@@ -291,7 +291,7 @@ const onFileChange = async (e: Event) => {
       file: window.URL.createObjectURL(file),
       fileName: file.name,
       date,
-      isPublic: false,
+      isPublic: true,
       location,
       orientation,
       rawFile: file, // Store the original File object for upload

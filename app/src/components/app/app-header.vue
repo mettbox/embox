@@ -6,15 +6,23 @@
         slot="start"
         color="light"
       />
-      <ion-back-button
-        v-if="hasBackButton === true"
+      <ion-buttons
         slot="start"
-        :text="$t('Back')"
-        color="light"
-      />
-      <ion-title>
+        v-if="hasBackButton"
+      >
+        <ion-button
+          @click="$router.back()"
+          color="light"
+        >
+          <ion-icon
+            :icon="chevronBackOutline"
+            slot="icon-only"
+          />
+        </ion-button>
+      </ion-buttons>
+      <ion-text>
         <slot />
-      </ion-title>
+      </ion-text>
       <ion-buttons slot="end">
         <slot name="buttons" />
       </ion-buttons>
@@ -24,7 +32,9 @@
 </template>
 
 <script setup lang="ts">
-import { IonHeader, IonToolbar, IonMenuButton, IonTitle, IonButtons, IonBackButton } from '@ionic/vue';
+import { IonHeader, IonToolbar, IonMenuButton, IonText, IonButtons, IonButton, IonIcon } from '@ionic/vue';
+import { chevronBackOutline } from 'ionicons/icons';
+
 import appLoading from '@/components/app/app-loading.vue';
 
 defineProps<{

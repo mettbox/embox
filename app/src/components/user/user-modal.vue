@@ -92,7 +92,10 @@
     </ion-content>
 
     <ion-footer>
-      <ion-toolbar color="primary">
+      <ion-toolbar
+        color="primary"
+        class="footer"
+      >
         <ion-buttons slot="end">
           <ion-button @click="onSave">
             <ion-icon
