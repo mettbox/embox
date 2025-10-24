@@ -140,6 +140,7 @@ const calculateVisibleRange = (startIndex: number, endIndex: number) => {
 const dynamicScrollerRef = ref<VueInstanceElement | null>(null);
 const longPressTimer = ref<number | null>(null);
 const longPressTriggered = ref(false);
+const touchStartY = ref(0);
 
 const onClickMedia = (media: Media) => {
   if (props.isSelectMode) {
@@ -155,7 +156,7 @@ const onLongPress = (media: Media) => {
   emit('media:select', media);
 };
 
-const onTouchStart = (event: Event) => {
+const onTouchStart = (event: TouchEvent | MouseEvent) => {
   const target = (event.target as HTMLElement).closest('.cell');
   if (!target) return;
 
@@ -163,6 +164,18 @@ const onTouchStart = (event: Event) => {
   const media = props.mediaList.find((m) => String(m.id) === id);
   if (!media) return;
 
+  // Get Y coordinate depending on event type
+  let clientY = 0;
+  if ('touches' in event && event.touches.length > 0) {
+    clientY = event.touches[0].clientY;
+  } else if ('clientY' in event) {
+    clientY = event.clientY;
+  } else {
+    console.warn('Unknown event type, no Y coordinate found');
+    return;
+  }
+
+  touchStartY.value = clientY;
   longPressTriggered.value = false;
   longPressTimer.value = window.setTimeout(() => {
     longPressTriggered.value = true;
@@ -170,16 +183,26 @@ const onTouchStart = (event: Event) => {
   }, 600);
 };
 
-const onTouchEnd = (event: Event) => {
+const onTouchEnd = (event: TouchEvent | MouseEvent) => {
   if (longPressTimer.value) clearTimeout(longPressTimer.value);
 
-  if (!longPressTriggered.value) {
-    const target = (event.target as HTMLElement).closest('.cell');
-    if (!target) return;
-    const id = target.getAttribute('data-id');
-    const media = props.mediaList.find((m) => String(m.id) === id);
-    if (media) onClickMedia(media);
+  let clientY = 0;
+  if ('changedTouches' in event && event.changedTouches.length > 0) {
+    clientY = event.changedTouches[0].clientY;
+  } else if ('clientY' in event) {
+    clientY = event.clientY;
+  } else {
+    return;
   }
+
+  if (Math.abs(clientY - touchStartY.value) > 10) return;
+  if (longPressTriggered.value) return;
+
+  const target = (event.target as HTMLElement).closest('.cell');
+  if (!target) return;
+  const id = target.getAttribute('data-id');
+  const media = props.mediaList.find((m) => String(m.id) === id);
+  if (media) onClickMedia(media);
 };
 
 onMounted(() => {

@@ -8,7 +8,7 @@ export const useUploadStore = defineStore('upload', () => {
   const albumId = ref<number | null>(null);
   const isUploading = ref(false);
   const uploadProgress = ref(0);
-  const batchSize = 4;
+  const batchSize = 6;
   const responses = ref<Record<string, any>>({});
 
   /**
