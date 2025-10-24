@@ -180,7 +180,7 @@ const onTouchStart = (event: TouchEvent | MouseEvent) => {
   longPressTimer.value = window.setTimeout(() => {
     longPressTriggered.value = true;
     onLongPress(media);
-  }, 600);
+  }, 1000); // 1 second press for long press
 };
 
 const onTouchEnd = (event: TouchEvent | MouseEvent) => {
