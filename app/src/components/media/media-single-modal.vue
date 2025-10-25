@@ -252,13 +252,13 @@ const slideOut = async (direction: 'left' | 'right') => {
 };
 
 const onPrev = async () => {
-  if (!props.hasPrev) return;
+  if (!props.hasPrev || isZoomMode.value === true) return;
   await slideOut('right');
   emit('prev', props.media.id);
 };
 
 const onNext = async () => {
-  if (!props.hasNext) return;
+  if (!props.hasNext || isZoomMode.value === true) return;
   await slideOut('left');
   emit('next', props.media.id);
 };
