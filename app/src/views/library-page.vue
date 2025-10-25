@@ -39,7 +39,7 @@
 
       <media-grid
         :mediaList="filteredMediaList"
-        :columns="app.mediaGridColumns"
+        :columns="isCollection ? app.mediaGridColumns - 1 : app.mediaGridColumns"
         :isSelectMode="isSelectMode"
         @update:visible-range="(range: string) => (visibleRange = range)"
         @media:open="onMediaOpen"
