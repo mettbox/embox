@@ -23,8 +23,8 @@
           class="cell"
           :style="{ flex: `1 1 calc(100% / ${columns})` }"
           :data-id="media.id"
+          @click="onClickMedia(media)"
         >
-          <!-- @click="onClickMedia(media)" -->
           <ion-thumbnail v-if="media.type === 'audio'">
             <ion-icon
               :icon="musicalNotes"
@@ -69,7 +69,7 @@
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import { IonImg, IonIcon, IonThumbnail } from '@ionic/vue';
 import { checkmarkCircle, musicalNotes, videocam, heart } from 'ionicons/icons';
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useThumbnail } from '@/composables/use-thumbnail';
 import { useSelectedMediaStore } from '@/stores/selectedMedia.store';
 
@@ -138,9 +138,9 @@ const calculateVisibleRange = (startIndex: number, endIndex: number) => {
 };
 
 const dynamicScrollerRef = ref<VueInstanceElement | null>(null);
-const longPressTimer = ref<number | null>(null);
-const longPressTriggered = ref(false);
-const touchStartY = ref(0);
+// const longPressTimer = ref<number | null>(null);
+// const longPressTriggered = ref(false);
+// const touchStartY = ref(0);
 
 const onClickMedia = (media: Media) => {
   if (props.isSelectMode) {
@@ -152,81 +152,81 @@ const onClickMedia = (media: Media) => {
   }
 };
 
-const onLongPress = (media: Media) => {
-  emit('media:select', media);
-};
+// const onLongPress = (media: Media) => {
+//   emit('media:select', media);
+// };
 
-const onTouchStart = (event: TouchEvent | MouseEvent) => {
-  const target = (event.target as HTMLElement).closest('.cell');
-  if (!target) return;
+// const onTouchStart = (event: TouchEvent | MouseEvent) => {
+//   const target = (event.target as HTMLElement).closest('.cell');
+//   if (!target) return;
 
-  const id = target.getAttribute('data-id');
-  const media = props.mediaList.find((m) => String(m.id) === id);
-  if (!media) return;
+//   const id = target.getAttribute('data-id');
+//   const media = props.mediaList.find((m) => String(m.id) === id);
+//   if (!media) return;
 
-  // Get Y coordinate depending on event type
-  let clientY = 0;
-  if ('touches' in event && event.touches.length > 0) {
-    clientY = event.touches[0].clientY;
-  } else if ('clientY' in event) {
-    clientY = event.clientY;
-  } else {
-    console.warn('Unknown event type, no Y coordinate found');
-    return;
-  }
+//   // Get Y coordinate depending on event type
+//   let clientY = 0;
+//   if ('touches' in event && event.touches.length > 0) {
+//     clientY = event.touches[0].clientY;
+//   } else if ('clientY' in event) {
+//     clientY = event.clientY;
+//   } else {
+//     console.warn('Unknown event type, no Y coordinate found');
+//     return;
+//   }
 
-  touchStartY.value = clientY;
-  longPressTriggered.value = false;
-  longPressTimer.value = window.setTimeout(() => {
-    longPressTriggered.value = true;
-    onLongPress(media);
-  }, 1000); // 1 second press for long press
-};
+//   touchStartY.value = clientY;
+//   longPressTriggered.value = false;
+//   longPressTimer.value = window.setTimeout(() => {
+//     longPressTriggered.value = true;
+//     onLongPress(media);
+//   }, 900); // 1 second press for long press
+// };
 
-const onTouchEnd = (event: TouchEvent | MouseEvent) => {
-  if (longPressTimer.value) clearTimeout(longPressTimer.value);
+// const onTouchEnd = (event: TouchEvent | MouseEvent) => {
+//   if (longPressTimer.value) clearTimeout(longPressTimer.value);
 
-  let clientY = 0;
-  if ('changedTouches' in event && event.changedTouches.length > 0) {
-    clientY = event.changedTouches[0].clientY;
-  } else if ('clientY' in event) {
-    clientY = event.clientY;
-  } else {
-    return;
-  }
+//   let clientY = 0;
+//   if ('changedTouches' in event && event.changedTouches.length > 0) {
+//     clientY = event.changedTouches[0].clientY;
+//   } else if ('clientY' in event) {
+//     clientY = event.clientY;
+//   } else {
+//     return;
+//   }
 
-  if (Math.abs(clientY - touchStartY.value) > 10) return;
-  if (longPressTriggered.value) return;
+//   if (Math.abs(clientY - touchStartY.value) > 10) return;
+//   if (longPressTriggered.value) return;
 
-  const target = (event.target as HTMLElement).closest('.cell');
-  if (!target) return;
-  const id = target.getAttribute('data-id');
-  const media = props.mediaList.find((m) => String(m.id) === id);
-  if (media) onClickMedia(media);
-};
+//   const target = (event.target as HTMLElement).closest('.cell');
+//   if (!target) return;
+//   const id = target.getAttribute('data-id');
+//   const media = props.mediaList.find((m) => String(m.id) === id);
+//   if (media) onClickMedia(media);
+// };
 
-onMounted(() => {
-  const el = dynamicScrollerRef.value?.$el;
-  if (!el) return;
+// onMounted(() => {
+//   const el = dynamicScrollerRef.value?.$el;
+//   if (!el) return;
 
-  el.addEventListener('touchstart', onTouchStart);
-  el.addEventListener('mousedown', onTouchStart);
-  el.addEventListener('touchend', onTouchEnd);
-  el.addEventListener('mouseup', onTouchEnd);
-  el.addEventListener('mouseleave', () => {
-    if (longPressTimer.value) clearTimeout(longPressTimer.value);
-  });
-});
+//   el.addEventListener('touchstart', onTouchStart);
+//   el.addEventListener('mousedown', onTouchStart);
+//   el.addEventListener('touchend', onTouchEnd);
+//   el.addEventListener('mouseup', onTouchEnd);
+//   el.addEventListener('mouseleave', () => {
+//     if (longPressTimer.value) clearTimeout(longPressTimer.value);
+//   });
+// });
 
-onBeforeUnmount(() => {
-  const el = dynamicScrollerRef.value?.$el;
-  if (!el) return;
+// onBeforeUnmount(() => {
+//   const el = dynamicScrollerRef.value?.$el;
+//   if (!el) return;
 
-  el.removeEventListener('touchstart', onTouchStart);
-  el.removeEventListener('mousedown', onTouchStart);
-  el.removeEventListener('touchend', onTouchEnd);
-  el.removeEventListener('mouseup', onTouchEnd);
-});
+//   el.removeEventListener('touchstart', onTouchStart);
+//   el.removeEventListener('mousedown', onTouchStart);
+//   el.removeEventListener('touchend', onTouchEnd);
+//   el.removeEventListener('mouseup', onTouchEnd);
+// });
 </script>
 
 <style>
