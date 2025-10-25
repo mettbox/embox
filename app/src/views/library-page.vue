@@ -71,8 +71,8 @@
     <media-single-modal
       :is-open="isMediaSingleModalOpen"
       :media="openMedia"
-      :has-prev="hasPrev"
-      :has-next="hasNext"
+      :prev-media-id="prevMediaId"
+      :next-media-id="nextMediaId"
       @did-dismiss="onCloseMedia"
       @prev="onShowPrevMedia"
       @next="onShowNextMedia"
@@ -187,16 +187,16 @@ const filteredMediaList = computed(() => {
   });
 });
 
-const hasPrev = computed(() => {
-  if (!openMedia.value) return false;
+const prevMediaId = computed(() => {
+  if (!openMedia.value) return null;
   const currentIndex = filteredMediaList.value.findIndex((m) => m.id === openMedia.value.id);
-  return currentIndex > 0;
+  return currentIndex > 0 ? filteredMediaList.value[currentIndex - 1].id : null;
 });
 
-const hasNext = computed(() => {
-  if (!openMedia.value) return false;
+const nextMediaId = computed(() => {
+  if (!openMedia.value) return null;
   const currentIndex = filteredMediaList.value.findIndex((m) => m.id === openMedia.value.id);
-  return currentIndex < filteredMediaList.value.length - 1;
+  return currentIndex < filteredMediaList.value.length - 1 ? filteredMediaList.value[currentIndex + 1].id : null;
 });
 
 const { t } = useI18n();
@@ -230,7 +230,7 @@ const sort = ref<'asc' | 'desc'>('desc');
 const mediatype = ref<'image' | 'video' | 'audio' | ''>('');
 const favourites = ref<boolean>(false);
 const nonPublicOnly = ref<boolean>(false);
-const isLatest = ref<'true' | 'false'>('true');
+const isLatest = ref<'true' | 'false'>('false');
 
 const collectionTitle = ref<string>('');
 const collectionDescription = ref<string>('');
@@ -269,14 +269,17 @@ const load = async () => {
     if (route.name === 'favourites' && props.id) {
       const favourites = (await FavouriteService.getFavouritesByUserID(props.id)) || [];
       collectionTitle.value = favourites.user.name;
+      isLatest.value = 'false';
       list = favourites.media;
     } else if (route.name === 'albums' && props.id) {
       const album = (await AlbumService.getByID(Number(props.id))) || [];
       selectedMedia.setAlbumId(Number(props.id));
       collectionTitle.value = album.name;
       collectionDescription.value = album.description;
+      isLatest.value = 'false';
       list = album.media;
     } else {
+      isLatest.value = 'true';
       list = (await MediaService.getMediaList()) || [];
     }
 

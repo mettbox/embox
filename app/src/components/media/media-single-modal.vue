@@ -163,8 +163,8 @@ import { useMeStore } from '@/stores/me.store';
 const props = defineProps<{
   isOpen: boolean;
   media: Media;
-  hasPrev: boolean;
-  hasNext: boolean;
+  prevMediaId: number | null;
+  nextMediaId: number | null;
 }>();
 
 const emit = defineEmits<{
@@ -198,18 +198,30 @@ const fileUrl = ref<string | undefined>(undefined);
 const isAdmin = me.isAdmin;
 const isZoomMode = ref(false);
 
+const prevFileUrl = ref<string | null>(null);
+const nextFileUrl = ref<string | null>(null);
+
 watch(
   () => props.media,
   async (newMedia, oldMedia) => {
-    if (!newMedia) {
-      fileUrl.value = undefined;
-      return;
+    if (!newMedia) return;
+
+    fileUrl.value = undefined;
+    await load();
+
+    if (oldMedia?.id && oldMedia.id !== props.prevMediaId && oldMedia.id !== props.nextMediaId) {
+      clearMediaCache(oldMedia.id);
     }
-    if (newMedia.id !== oldMedia?.id) {
-      fileUrl.value = undefined;
-      await load();
-    }
+
+    const [prevUrl, nextUrl] = await Promise.all([
+      props.prevMediaId ? preloadImage(props.prevMediaId) : null,
+      props.nextMediaId ? preloadImage(props.nextMediaId) : null,
+    ]);
+
+    prevFileUrl.value = prevUrl;
+    nextFileUrl.value = nextUrl;
   },
+  { immediate: true },
 );
 
 const load = async () => {
@@ -252,15 +264,59 @@ const slideOut = async (direction: 'left' | 'right') => {
 };
 
 const onPrev = async () => {
-  if (!props.hasPrev || isZoomMode.value === true) return;
+  if (!props.prevMediaId || isZoomMode.value) return;
+
   await slideOut('right');
+  if (prevFileUrl.value) {
+    fileUrl.value = prevFileUrl.value;
+  }
   emit('prev', props.media.id);
 };
 
 const onNext = async () => {
-  if (!props.hasNext || isZoomMode.value === true) return;
+  if (!props.nextMediaId || isZoomMode.value) return;
+
   await slideOut('left');
+  if (nextFileUrl.value) {
+    fileUrl.value = nextFileUrl.value;
+  }
   emit('next', props.media.id);
+};
+
+const mediaCache = new Map<number, string>();
+
+const preloadImage = async (mediaId: number) => {
+  if (mediaCache.has(mediaId)) {
+    return mediaCache.get(mediaId)!;
+  }
+
+  try {
+    const blob = await MediaService.getMediaFile(mediaId);
+    const url = URL.createObjectURL(blob);
+    mediaCache.set(mediaId, url);
+    return url;
+  } catch (error) {
+    console.error(`Failed to preload media file with ID ${mediaId}:`, error);
+    return null;
+  }
+};
+
+const clearMediaCache = (mediaId: number) => {
+  if (mediaCache.has(mediaId)) {
+    URL.revokeObjectURL(mediaCache.get(mediaId)!);
+    mediaCache.delete(mediaId);
+  }
+};
+
+const clearPreloadedUrls = () => {
+  if (prevFileUrl.value) {
+    URL.revokeObjectURL(prevFileUrl.value);
+    prevFileUrl.value = null;
+  }
+  if (nextFileUrl.value) {
+    URL.revokeObjectURL(nextFileUrl.value);
+    nextFileUrl.value = null;
+  }
 };
 
 const initSwipe = async () => {
@@ -310,7 +366,14 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKey);
-  gesture.value?.destroy();
+  if (gesture.value) {
+    gesture.value.destroy();
+  }
+  clearPreloadedUrls();
+
+  // Clear cache
+  mediaCache.forEach((url) => URL.revokeObjectURL(url));
+  mediaCache.clear();
 });
 </script>
 
