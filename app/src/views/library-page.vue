@@ -48,13 +48,15 @@
 
       <media-toolbar
         :sort="sort"
+        :latest="isLatest"
         :filter="mediatype === '' && favourites ? 'favourites' : mediatype"
-        :public-only="publicOnly"
+        :non-public-only="nonPublicOnly"
         :is-select-mode="isSelectMode"
         @toggle-select-mode="toggleSelectMode"
         @update:sort="onChangedSort"
+        @update:latest="(newLatest: 'true' | 'false') => (isLatest = newLatest)"
         @update:filter="onChangedFilter"
-        @update:public-only="onChangedPublicOnly"
+        @update:non-public-only="onChangedNonPublicOnly"
         @favourite:set="onSetFavourites"
         @favourite:unset="onUnsetFavourites"
         @album:select="onSelectAlbum"
@@ -104,12 +106,12 @@
       @did-edit="onDidEditMedia"
     />
 
-    <media-context-popover
+    <!-- <media-context-popover
       :is-open="hasOpenContextPopover"
       @close="onCloseMediaContextPopover"
       @update:sort="onChangedSort"
       @update:filter="onChangedFilter"
-      @update:public-only="onChangedPublicOnly"
+      @update:non-public-only="onChangedNonPublicOnly"
       @favourite:set="onSetFavourites"
       @favourite:unset="onUnsetFavourites"
       @public:set="onSetPublic"
@@ -118,7 +120,7 @@
       @album:unset="onAlbumUnselect"
       @edit="onEditMedia"
       @delete="onDelete"
-    />
+    /> -->
   </ion-page>
 </template>
 
@@ -143,7 +145,7 @@ import albumSelectModal from '@/components/album/album-select-modal.vue';
 import mediaEditModal from '@/components/media/media-edit-modal.vue';
 import { useSelectedMediaStore } from '@/stores/selectedMedia.store';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
-import mediaContextPopover from '@/components/media/media-context-popover.vue';
+// import mediaContextPopover from '@/components/media/media-context-popover.vue';
 
 const props = defineProps<{
   id?: string;
@@ -167,7 +169,12 @@ const filteredMediaList = computed(() => {
   const filtered = mediaList.value.filter((media) => {
     if (favourites.value && !media.isFavourite) return false;
     if (mediatype.value && media.type !== mediatype.value) return false;
-    if (isAdmin && publicOnly.value && !media.isPublic) return false;
+    if (isAdmin && nonPublicOnly.value && media.isPublic) return false;
+    if (isLatest.value === 'true') {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      if (new Date(media.date) < thirtyDaysAgo) return false;
+    }
     return true;
   });
 
@@ -222,7 +229,8 @@ const isSelectMode = ref(false);
 const sort = ref<'asc' | 'desc'>('desc');
 const mediatype = ref<'image' | 'video' | 'audio' | ''>('');
 const favourites = ref<boolean>(false);
-const publicOnly = ref<boolean>(false);
+const nonPublicOnly = ref<boolean>(false);
+const isLatest = ref<'true' | 'false'>('true');
 
 const collectionTitle = ref<string>('');
 const collectionDescription = ref<string>('');
@@ -305,8 +313,8 @@ const onChangedFilter = (newFilter: '' | 'image' | 'video' | 'audio' | 'favourit
   }
 };
 
-const onChangedPublicOnly = (newPublicOnly: boolean) => {
-  publicOnly.value = newPublicOnly;
+const onChangedNonPublicOnly = (newPublicOnly: boolean) => {
+  nonPublicOnly.value = newPublicOnly;
 };
 
 const onSetFavourites = async () => {
@@ -540,10 +548,10 @@ const onMediaSingleSelect = async (media: Media) => {
   hasOpenContextPopover.value = true;
 };
 
-const onCloseMediaContextPopover = () => {
-  hasOpenContextPopover.value = false;
-  selectedMedia.clear();
-};
+// const onCloseMediaContextPopover = () => {
+//   hasOpenContextPopover.value = false;
+//   selectedMedia.clear();
+// };
 
 const onShowPrevMedia = (id: number) => {
   const currentIndex = filteredMediaList.value.findIndex((m) => m.id === id);

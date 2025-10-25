@@ -1,13 +1,13 @@
 <template>
   <ion-button
-    v-if="publicOnly"
+    v-if="nonPublicOnly"
     shape="round"
     color="primary"
-    @click="emit('update:public-only', false)"
+    @click="emit('update:non-public-only', false)"
   >
     <ion-icon
       slot="icon-only"
-      :icon="eye"
+      :icon="eyeOff"
     />
   </ion-button>
 
@@ -30,6 +30,28 @@
     <ion-content>
       <ion-list lines="none">
         <ion-radio-group
+          :value="latest"
+          @ionChange="emit('update:latest', $event.detail.value)"
+        >
+          <ion-item>
+            <ion-radio
+              justify="space-between"
+              value="true"
+              >{{ $t('Latest') }}</ion-radio
+            >
+          </ion-item>
+          <ion-item lines="full">
+            <ion-radio
+              justify="space-between"
+              value="false"
+              >{{ $t('All') }}</ion-radio
+            >
+          </ion-item>
+        </ion-radio-group>
+      </ion-list>
+
+      <ion-list lines="none">
+        <ion-radio-group
           :value="sort"
           @ionChange="emit('update:sort', $event.detail.value)"
         >
@@ -49,6 +71,7 @@
           </ion-item>
         </ion-radio-group>
       </ion-list>
+
       <ion-list
         v-if="isAdmin"
         lines="full"
@@ -56,15 +79,15 @@
         <ion-item
           :button="true"
           :detail="false"
-          @click="emit('update:public-only', !publicOnly)"
+          @click="emit('update:non-public-only', !nonPublicOnly)"
         >
           <ion-icon
             slot="end"
             size="small"
-            :color="publicOnly ? 'primary' : 'medium'"
-            :icon="publicOnly ? eye : eyeOutline"
+            :color="nonPublicOnly ? 'primary' : 'medium'"
+            :icon="nonPublicOnly ? eyeOff : eyeOffOutline"
           />
-          <ion-label>{{ $t('Public only') }}</ion-label>
+          <ion-label>{{ $t('Non public only') }}</ion-label>
         </ion-item>
       </ion-list>
       <ion-list lines="none">
@@ -153,7 +176,6 @@ import {
 import {
   heart,
   heartOutline,
-  eyeOutline,
   swapVertical,
   appsOutline,
   images,
@@ -162,8 +184,9 @@ import {
   videocamOutline,
   musicalNotesOutline,
   musicalNotes,
-  eye,
   apps,
+  eyeOffOutline,
+  eyeOff,
 } from 'ionicons/icons';
 import { computed } from 'vue';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
@@ -171,18 +194,20 @@ import { useMeStore } from '@/stores/me.store';
 
 const props = defineProps<{
   sort: 'asc' | 'desc';
+  latest: 'true' | 'false';
   filter: '' | 'image' | 'video' | 'audio' | 'favourites';
-  publicOnly: boolean;
+  nonPublicOnly: boolean;
 }>();
 
 const emit = defineEmits<{
   (e: 'update:sort', value: 'asc' | 'desc'): void;
+  (e: 'update:latest', value: 'true' | 'false'): void;
   (e: 'update:filter', value: '' | 'image' | 'video' | 'audio' | 'favourites'): void;
-  (e: 'update:public-only', value: boolean): void;
+  (e: 'update:non-public-only', value: boolean): void;
 }>();
 
 const isActive = computed(() => {
-  return props.filter !== '' || props.sort !== 'desc' || props.publicOnly;
+  return props.filter !== '' || props.sort !== 'desc' || props.nonPublicOnly;
 });
 
 const buttonIcon = computed(() => {
