@@ -75,10 +75,10 @@ export const useUploadStore = defineStore('upload', () => {
         );
 
         await Promise.all(uploadPromises);
-
-        if (albumId.value) {
-          await addToAlbum();
-        }
+      }
+      if (albumId.value) {
+        const mediaIds = Object.values(responses.value).map((media: Media) => media.id);
+        await AlbumService.addMedia(albumId.value, mediaIds);
       }
     } finally {
       isUploading.value = false;
@@ -86,15 +86,6 @@ export const useUploadStore = defineStore('upload', () => {
     }
 
     return { success: uploadedFiles, failed: failedFiles };
-  };
-
-  const addToAlbum = async (): Promise<void> => {
-    if (!albumId.value) {
-      return;
-    }
-
-    const mediaIds = Object.values(responses.value).map((media: Media) => media.id);
-    await AlbumService.addMedia(albumId.value, mediaIds);
   };
 
   /**
