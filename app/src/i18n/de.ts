@@ -77,7 +77,7 @@ export default {
   Audios: 'Audios',
   'Public only': 'Nur öffentliche',
   'Non public only': 'Nur nicht-öffentliche',
-  Latest: 'Letzte 30 Tage',
+  Latest: 'Letzte 31 Tage',
   All: 'Alle',
   Favourite: 'Favorit',
   'No Favourite': 'Kein Favorit',

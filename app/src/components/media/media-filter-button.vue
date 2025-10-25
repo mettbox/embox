@@ -10,6 +10,17 @@
       :icon="eyeOff"
     />
   </ion-button>
+  <ion-button
+    v-if="latest === 'true'"
+    shape="round"
+    color="primary"
+    @click="emit('update:latest', 'false')"
+  >
+    <ion-icon
+      slot="icon-only"
+      :icon="calendarNumberOutline"
+    />
+  </ion-button>
 
   <ion-button
     id="filter-popover"
@@ -187,6 +198,7 @@ import {
   apps,
   eyeOffOutline,
   eyeOff,
+  calendarNumberOutline,
 } from 'ionicons/icons';
 import { computed } from 'vue';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
