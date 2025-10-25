@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	_ "embed"
 	"embox/internal/api/dto"
 	"embox/internal/api/response"
 	"embox/internal/services"
@@ -15,6 +16,9 @@ type MediaHandler struct {
 	userService  *services.UserService
 	mediaService *services.MediaService
 }
+
+//go:embed media/error.webp
+var defaultThumbnail []byte
 
 func NewMediaHandler(userService *services.UserService, mediaService *services.MediaService) *MediaHandler {
 	return &MediaHandler{userService, mediaService}
@@ -46,7 +50,8 @@ func (h *MediaHandler) GetMediaThumbnail(c *gin.Context) {
 
 	data, mimeType, err := h.mediaService.GetThumbnail(uint(id))
 	if err != nil {
-		response.JSONError(c, http.StatusNotFound, "File not found", err.Error())
+		// response.JSONError(c, http.StatusNotFound, "File not found", err.Error())
+		c.Data(http.StatusOK, "image/webp", defaultThumbnail)
 		return
 	}
 
