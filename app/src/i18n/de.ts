@@ -22,6 +22,7 @@ export default {
   Seconds: 'Sekunden',
   Back: 'Zurück',
   'Failed to login': 'Anmelden fehlgeschlagen',
+  Reload: 'Neu laden',
   // Users page
   'Failed to delete user': 'Löschen des Benutzers fehlgeschlagen',
   'Failed to edit user': 'Bearbeiten des Benutzers fehlgeschlagen',

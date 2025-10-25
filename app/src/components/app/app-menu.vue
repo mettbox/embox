@@ -135,6 +135,21 @@
     >
       <ion-list class="ion-padding-bottom">
         <ion-item
+          target="_blank"
+          lines="none"
+          :detail="false"
+          @click="reloadApp"
+          :button="true"
+        >
+          <ion-icon
+            inert
+            slot="start"
+            :icon="reloadOutline"
+          />
+          <ion-label>{{ $t('Reload') }}</ion-label>
+        </ion-item>
+
+        <ion-item
           href="https://github.com/mettbox/embox"
           target="_blank"
           lines="none"
@@ -184,6 +199,7 @@ import {
   logInOutline,
   logOutOutline,
   ellipsisHorizontalCircleOutline,
+  reloadOutline,
 } from 'ionicons/icons';
 import appLogo from '@/components/app/app-logo.vue';
 import { useAppStore } from '@/stores/app.store';
@@ -196,6 +212,10 @@ const me = useMeStore();
 const isAuth = computed(() => me.isLoggedIn);
 const isAdmin = computed(() => me.isAdmin);
 const userName = computed(() => me.name || '');
+
+const reloadApp = () => {
+  location.reload();
+};
 </script>
 
 <style scoped>
