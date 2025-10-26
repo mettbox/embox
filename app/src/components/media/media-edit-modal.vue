@@ -37,7 +37,7 @@
 
           <ion-label>
             <ion-textarea
-              :rows="1"
+              :rows="2"
               :auto-grow="true"
               :placeholder="media.caption || $t('Add a caption…')"
               v-model="items[index].caption"
