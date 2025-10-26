@@ -57,10 +57,11 @@ func (s *UserService) GetAllUsers() ([]dto.UserResponse, error) {
 	var results []dto.UserResponse
 	for _, user := range users {
 		results = append(results, dto.UserResponse{
-			ID:      user.ID.String(),
-			Name:    user.Name,
-			Email:   user.Email,
-			IsAdmin: user.IsAdmin,
+			ID:                  user.ID.String(),
+			Name:                user.Name,
+			Email:               user.Email,
+			IsAdmin:             user.IsAdmin,
+			HasPublicFavourites: user.HasPublicFavourites,
 		})
 	}
 
@@ -78,10 +79,11 @@ func (s *UserService) GetByToken(token string, validDuration time.Duration) (*dt
 	}
 
 	result := &dto.UserResponse{
-		ID:      user.ID.String(),
-		Name:    user.Name,
-		Email:   user.Email,
-		IsAdmin: user.IsAdmin,
+		ID:                  user.ID.String(),
+		Name:                user.Name,
+		Email:               user.Email,
+		IsAdmin:             user.IsAdmin,
+		HasPublicFavourites: user.HasPublicFavourites,
 	}
 
 	return result, nil
@@ -118,10 +120,11 @@ func (s *UserService) GetUserByEmail(email string) (*dto.UserResponse, error) {
 	}
 
 	result := &dto.UserResponse{
-		ID:      user.ID.String(),
-		Name:    user.Name,
-		Email:   user.Email,
-		IsAdmin: user.IsAdmin,
+		ID:                  user.ID.String(),
+		Name:                user.Name,
+		Email:               user.Email,
+		IsAdmin:             user.IsAdmin,
+		HasPublicFavourites: user.HasPublicFavourites,
 	}
 
 	return result, nil
