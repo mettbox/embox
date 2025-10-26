@@ -80,10 +80,9 @@
           <ion-textarea
             ref="messageInput"
             v-model="form.message"
-            fill="outline"
+            fill="solid"
             :auto-grow="true"
             :placeholder="$t('Message')"
-            :helper-text="$t('Use [URL] as a placeholder for the login URL.')"
             :error-text="isTouched.message ? fieldErrors.message : ''"
             @ion-blur="() => validateField('message')"
           />
@@ -110,7 +109,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
   IonButton,
@@ -141,6 +140,16 @@ const props = defineProps<{
   isCurrentUser: boolean;
 }>();
 
+const loginUrl = computed(() => {
+  const url = new URL(window.location.href);
+  url.pathname = '/login';
+  return url.toString();
+});
+
+const helloMessage = computed(() => {
+  return t('Hello message', { name: props.name ? props.name : '' }) + loginUrl.value;
+});
+
 const { t } = useI18n();
 const modalRef = ref<InstanceType<typeof IonModal> | null>(null);
 const title = ref('');
@@ -156,7 +165,7 @@ const getDefaults = (): Record<string, any> => ({
   email: props.email || '',
   isAdmin: props.isAdmin || false,
   subject: props.isCurrentUser === false ? t('Welcome!') : '',
-  message: props.isCurrentUser === false ? t('Hello message', { name: props.name ? props.name : '' }) : '',
+  message: helloMessage.value,
 });
 
 const form = reactive(getDefaults());
@@ -231,10 +240,10 @@ const onSave = () => {
   }
 
   const currentUrl = new URL(window.location.href);
-  currentUrl.pathname = `/login/${form.email}`;
+  currentUrl.pathname = `/login`;
   const message = sendMail.value
     ? form.message
-        .replace('[URL]', `<a href="${currentUrl.toString()}" target="_blank">${currentUrl.toString()}</a>`)
+        .replace(loginUrl.value, `<a href="${currentUrl.toString()}" target="_blank">${loginUrl.value}</a>`)
         .replace(/\n/g, '<br>')
     : '';
 

@@ -1,6 +1,6 @@
 <template>
   <ion-page>
-    <app-header>
+    <app-header :has-back-button="true">
       {{ $t('Profile') }}
     </app-header>
 

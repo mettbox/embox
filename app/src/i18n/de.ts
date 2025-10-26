@@ -34,7 +34,7 @@ export default {
   'Please enter an email address': 'Bitte E-Mail eingeben',
   'Administrator?': 'Administrator?',
   'Send email?': 'E-Mail senden?',
-  'Hello message': 'Hallo {name},\n\nKlicke bitte hier, um dich anzumelden:\n[URL]',
+  'Hello message': 'Hallo {name},\n\nKlicke bitte hier, um dich anzumelden:\n',
   'Subject is required': 'Betreff ist erforderlich',
   Subject: 'Betreff',
   'Message is required': 'Nachricht ist erforderlich',
@@ -45,7 +45,6 @@ export default {
   'Email address': 'E-Mail-Adresse',
   'You cannot change your own email address.': 'Du kannst deine eigene E-Mail-Adresse nicht ändern.',
   'New User': 'Neuer Benutzer',
-  'Use [URL] as a placeholder for the login URL.': 'Tippe [URL] als Platzhalter für die Login URL.',
   // Login page
   registration_intro:
     'Gib bitte die E-Mail-Adresse ein, an die die Einladung zu dieser App geschickt wurde. In einer weiteren Mail erhälst du anschließend einen Login-Code.',
