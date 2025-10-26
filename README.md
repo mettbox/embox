@@ -100,8 +100,7 @@ Setup Database
 In uberspace terminal:
 
 ```sh
-go build -o /home/mettbox/em/main ./cmd/api/main.go
-$ go build -o ../../main ./cmd/api/main.go
+go build -o ../../main ./cmd/api/main.go
 chmod +x /home/mettbox/em/main
 ```
 

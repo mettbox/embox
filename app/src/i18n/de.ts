@@ -115,7 +115,7 @@ export default {
   'Update Profil': 'Profil aktualisieren',
   'Profile updated': 'Profil wurde aktualisiert',
   'You will be logged out and need to login again after changing your email address.':
-    'Wenn du deine E-Mail-Adresse änders, wirst du abgemeldet und musst dich erneut anmelden',
+    'Wenn du deine E-Mail-Adresse änderst, wirst du abgemeldet und musst dich erneut anmelden.',
   'My favourites are public': 'Meine Favoriten sind öffentlich',
   'Updated public favourites setting': 'Einstellung für öffentliche Favoriten wurde aktualisiert',
   'Failed to update public favourites setting':
