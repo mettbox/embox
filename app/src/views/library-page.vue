@@ -43,18 +43,15 @@
         :isSelectMode="isSelectMode"
         @update:visible-range="(range: string) => (visibleRange = range)"
         @media:open="onMediaOpen"
-        @media:select="onMediaSingleSelect"
       />
 
       <media-toolbar
         :sort="sort"
-        :latest="isLatest"
         :filter="mediatype === '' && favourites ? 'favourites' : mediatype"
         :non-public-only="nonPublicOnly"
         :is-select-mode="isSelectMode"
         @toggle-select-mode="toggleSelectMode"
         @update:sort="onChangedSort"
-        @update:latest="(newLatest: 'true' | 'false') => (isLatest = newLatest)"
         @update:filter="onChangedFilter"
         @update:non-public-only="onChangedNonPublicOnly"
         @favourite:set="onSetFavourites"
@@ -170,11 +167,6 @@ const filteredMediaList = computed(() => {
     if (favourites.value && !media.isFavourite) return false;
     if (mediatype.value && media.type !== mediatype.value) return false;
     if (isAdmin && nonPublicOnly.value && media.isPublic) return false;
-    if (isLatest.value === 'true') {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      if (new Date(media.date) < thirtyDaysAgo) return false;
-    }
     return true;
   });
 
@@ -230,7 +222,6 @@ const sort = ref<'asc' | 'desc'>('desc');
 const mediatype = ref<'image' | 'video' | 'audio' | ''>('');
 const favourites = ref<boolean>(false);
 const nonPublicOnly = ref<boolean>(false);
-const isLatest = ref<'true' | 'false'>('false');
 
 const collectionTitle = ref<string>('');
 const collectionDescription = ref<string>('');
@@ -269,17 +260,14 @@ const load = async () => {
     if (route.name === 'favourites' && props.id) {
       const favourites = (await FavouriteService.getFavouritesByUserID(props.id)) || [];
       collectionTitle.value = favourites.user.name;
-      isLatest.value = 'false';
       list = favourites.media;
     } else if (route.name === 'albums' && props.id) {
       const album = (await AlbumService.getByID(Number(props.id))) || [];
       selectedMedia.setAlbumId(Number(props.id));
       collectionTitle.value = album.name;
       collectionDescription.value = album.description;
-      isLatest.value = 'false';
       list = album.media;
     } else {
-      isLatest.value = 'true';
       list = (await MediaService.getMediaList()) || [];
     }
 
@@ -321,7 +309,7 @@ const onChangedNonPublicOnly = (newPublicOnly: boolean) => {
 };
 
 const onSetFavourites = async () => {
-  hasOpenContextPopover.value = false;
+  // hasOpenContextPopover.value = false;
   if (selectedMedia.ids.length === 0) return;
 
   try {
@@ -348,7 +336,7 @@ const onSetFavourites = async () => {
 };
 
 const onUnsetFavourites = async () => {
-  hasOpenContextPopover.value = false;
+  // hasOpenContextPopover.value = false;
   if (selectedMedia.ids.length === 0) return;
 
   try {
@@ -375,7 +363,7 @@ const onUnsetFavourites = async () => {
 };
 
 const onSetPublic = async () => {
-  hasOpenContextPopover.value = false;
+  // hasOpenContextPopover.value = false;
   if (selectedMedia.ids.length === 0) return;
 
   try {
@@ -402,7 +390,7 @@ const onSetPublic = async () => {
 };
 
 const onUnsetPublic = async () => {
-  hasOpenContextPopover.value = false;
+  // hasOpenContextPopover.value = false;
   if (selectedMedia.ids.length === 0) return;
 
   try {
@@ -429,12 +417,12 @@ const onUnsetPublic = async () => {
 };
 
 const onSelectAlbum = async () => {
-  hasOpenContextPopover.value = false;
+  // hasOpenContextPopover.value = false;
   hasOpenAlbumModal.value = true;
 };
 
 const onAlbumSelected = async (id: number) => {
-  hasOpenContextPopover.value = false;
+  // hasOpenContextPopover.value = false;
   if (selectedMedia.ids.length === 0) {
     hasOpenAlbumModal.value = false;
     return;
@@ -454,7 +442,7 @@ const onAlbumSelected = async (id: number) => {
 };
 
 const onAlbumUnselect = async () => {
-  hasOpenContextPopover.value = false;
+  // hasOpenContextPopover.value = false;
   if (route.name !== 'albums' || !props.id || selectedMedia.ids.length === 0) {
     return;
   }
@@ -472,7 +460,7 @@ const onAlbumUnselect = async () => {
 };
 
 const onEditMedia = () => {
-  hasOpenContextPopover.value = false;
+  // hasOpenContextPopover.value = false;
   if (selectedMedia.ids.length === 0) return;
   hasOpenEditMediaModal.value = true;
 };
@@ -510,7 +498,7 @@ const onDidEditMedia = async (items: Partial<Media>[]) => {
 };
 
 const onDelete = async () => {
-  hasOpenContextPopover.value = false;
+  // hasOpenContextPopover.value = false;
   if (selectedMedia.ids.length === 0) return;
 
   try {
@@ -543,13 +531,13 @@ const onCloseMedia = () => {
   openMedia.value = null;
 };
 
-const hasOpenContextPopover = ref(false);
+// const hasOpenContextPopover = ref(false);
 
-const onMediaSingleSelect = async (media: Media) => {
-  selectedMedia.clear();
-  selectedMedia.add(media);
-  hasOpenContextPopover.value = true;
-};
+// const onMediaSingleSelect = async (media: Media) => {
+//   selectedMedia.clear();
+//   selectedMedia.add(media);
+//   hasOpenContextPopover.value = true;
+// };
 
 // const onCloseMediaContextPopover = () => {
 //   hasOpenContextPopover.value = false;

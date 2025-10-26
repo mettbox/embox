@@ -7,9 +7,7 @@
       :sort="sort"
       :filter="filter"
       :non-public-only="nonPublicOnly"
-      :latest="latest"
       @update:sort="(newSort: 'asc' | 'desc') => emit('update:sort', newSort)"
-      @update:latest="(newLatest: 'true' | 'false') => emit('update:latest', newLatest)"
       @update:filter="(type: '' | 'image' | 'video' | 'audio' | 'favourites') => emit('update:filter', type)"
       @update:non-public-only="(nonPublicOnly: boolean) => emit('update:non-public-only', nonPublicOnly)"
     />
@@ -36,7 +34,6 @@ import mediaSelectButton from '@/components/media/media-select-button.vue';
 defineProps<{
   isSelectMode: boolean;
   sort: 'asc' | 'desc';
-  latest: 'true' | 'false';
   filter: '' | 'image' | 'video' | 'audio' | 'favourites';
   nonPublicOnly: boolean;
 }>();
@@ -44,7 +41,6 @@ defineProps<{
 const emit = defineEmits<{
   (e: 'toggle-select-mode'): void;
   (e: 'update:sort', value: 'asc' | 'desc'): void;
-  (e: 'update:latest', value: 'true' | 'false'): void;
   (e: 'update:filter', value: '' | 'image' | 'video' | 'audio' | 'favourites'): void;
   (e: 'update:non-public-only', value: boolean): void;
   (e: 'favourite:set'): void;

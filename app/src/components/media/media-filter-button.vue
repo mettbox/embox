@@ -11,18 +11,6 @@
     />
   </ion-button>
   <ion-button
-    v-if="latest === 'true'"
-    shape="round"
-    color="primary"
-    @click="emit('update:latest', 'false')"
-  >
-    <ion-icon
-      slot="icon-only"
-      :icon="calendarNumberOutline"
-    />
-  </ion-button>
-
-  <ion-button
     id="filter-popover"
     shape="round"
     :color="isActive ? 'primary' : 'dark'"
@@ -39,28 +27,6 @@
     :dismiss-on-select="true"
   >
     <ion-content>
-      <ion-list lines="none">
-        <ion-radio-group
-          :value="latest"
-          @ionChange="emit('update:latest', $event.detail.value)"
-        >
-          <ion-item>
-            <ion-radio
-              justify="space-between"
-              value="true"
-              >{{ $t('Latest') }}</ion-radio
-            >
-          </ion-item>
-          <ion-item lines="full">
-            <ion-radio
-              justify="space-between"
-              value="false"
-              >{{ $t('All') }}</ion-radio
-            >
-          </ion-item>
-        </ion-radio-group>
-      </ion-list>
-
       <ion-list lines="none">
         <ion-radio-group
           :value="sort"
@@ -198,7 +164,6 @@ import {
   apps,
   eyeOffOutline,
   eyeOff,
-  calendarNumberOutline,
 } from 'ionicons/icons';
 import { computed } from 'vue';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
@@ -206,14 +171,12 @@ import { useMeStore } from '@/stores/me.store';
 
 const props = defineProps<{
   sort: 'asc' | 'desc';
-  latest: 'true' | 'false';
   filter: '' | 'image' | 'video' | 'audio' | 'favourites';
   nonPublicOnly: boolean;
 }>();
 
 const emit = defineEmits<{
   (e: 'update:sort', value: 'asc' | 'desc'): void;
-  (e: 'update:latest', value: 'true' | 'false'): void;
   (e: 'update:filter', value: '' | 'image' | 'video' | 'audio' | 'favourites'): void;
   (e: 'update:non-public-only', value: boolean): void;
 }>();
