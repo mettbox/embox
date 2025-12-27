@@ -35,10 +35,11 @@ func (s *UserService) CreateUser(user *models.User) (*dto.UserResponse, error) {
 	}
 
 	userResponse := &dto.UserResponse{
-		ID:      user.ID.String(),
-		Name:    user.Name,
-		Email:   user.Email,
-		IsAdmin: user.IsAdmin,
+		ID:          user.ID.String(),
+		Name:        user.Name,
+		Email:       user.Email,
+		IsAdmin:     user.IsAdmin,
+		LastLoginAt: user.LastLoginAt,
 	}
 
 	return userResponse, nil
@@ -62,6 +63,7 @@ func (s *UserService) GetAllUsers() ([]dto.UserResponse, error) {
 			Email:               user.Email,
 			IsAdmin:             user.IsAdmin,
 			HasPublicFavourites: user.HasPublicFavourites,
+			LastLoginAt:         user.LastLoginAt,
 		})
 	}
 
@@ -84,6 +86,7 @@ func (s *UserService) GetByToken(token string, validDuration time.Duration) (*dt
 		Email:               user.Email,
 		IsAdmin:             user.IsAdmin,
 		HasPublicFavourites: user.HasPublicFavourites,
+		LastLoginAt:         user.LastLoginAt,
 	}
 
 	return result, nil
@@ -100,10 +103,11 @@ func (s *UserService) GetUserById(id uuid.UUID) (*dto.UserResponse, error) {
 	}
 
 	result := &dto.UserResponse{
-		ID:      user.ID.String(),
-		Name:    user.Name,
-		Email:   user.Email,
-		IsAdmin: user.IsAdmin,
+		ID:          user.ID.String(),
+		Name:        user.Name,
+		Email:       user.Email,
+		IsAdmin:     user.IsAdmin,
+		LastLoginAt: user.LastLoginAt,
 	}
 
 	return result, nil
@@ -125,6 +129,7 @@ func (s *UserService) GetUserByEmail(email string) (*dto.UserResponse, error) {
 		Email:               user.Email,
 		IsAdmin:             user.IsAdmin,
 		HasPublicFavourites: user.HasPublicFavourites,
+		LastLoginAt:         user.LastLoginAt,
 	}
 
 	return result, nil
@@ -152,6 +157,9 @@ func (s *UserService) UpdateUser(id uuid.UUID, req dto.UpdateUserRequest) (*dto.
 	if req.HasPublicFavourites != nil {
 		existingUser.HasPublicFavourites = req.HasPublicFavourites
 	}
+	if req.LastLoginAt != nil {
+		existingUser.LastLoginAt = req.LastLoginAt
+	}
 
 	if err := s.userRepo.Update(existingUser); err != nil {
 		return nil, fmt.Errorf("failed to update user: %w", err)
@@ -163,6 +171,7 @@ func (s *UserService) UpdateUser(id uuid.UUID, req dto.UpdateUserRequest) (*dto.
 		Email:               existingUser.Email,
 		IsAdmin:             existingUser.IsAdmin,
 		HasPublicFavourites: existingUser.HasPublicFavourites,
+		LastLoginAt:         existingUser.LastLoginAt,
 	}
 
 	return result, nil

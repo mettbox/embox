@@ -17,6 +17,7 @@ type User struct {
 	TokenCreatedAt      time.Time `gorm:"default:null"`
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
+	LastLoginAt         *time.Time  `gorm:"default:null"`
 	Favourites          []Favourite `gorm:"foreignKey:UserID"`
 }
 

@@ -6,8 +6,10 @@ import (
 	"embox/internal/services"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type AuthHandler struct {
@@ -57,6 +59,21 @@ func (h *AuthHandler) Login(c *gin.Context) {
 			return
 		}
 		response.JSONError(c, http.StatusUnauthorized, "Failed to login", err.Error())
+		return
+	}
+	userID, err := uuid.Parse(user.ID)
+	if err != nil {
+		response.JSONError(c, http.StatusInternalServerError, "Invalid user ID", err.Error())
+		return
+	}
+
+	now := time.Now()
+	user.LastLoginAt = &now
+	_, err = h.userService.UpdateUser(userID, dto.UpdateUserRequest{
+		LastLoginAt: user.LastLoginAt,
+	})
+	if err != nil {
+		response.JSONError(c, http.StatusInternalServerError, "Failed to update user", err.Error())
 		return
 	}
 

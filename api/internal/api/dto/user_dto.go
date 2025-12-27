@@ -1,11 +1,14 @@
 package dto
 
+import "time"
+
 type UserResponse struct {
-	ID                  string `json:"id"`
-	Name                string `json:"name"`
-	Email               string `json:"email"`
-	IsAdmin             bool   `json:"isAdmin"`
-	HasPublicFavourites *bool  `json:"hasPublicFavourites,omitempty"`
+	ID                  string     `json:"id"`
+	Name                string     `json:"name"`
+	Email               string     `json:"email"`
+	IsAdmin             bool       `json:"isAdmin"`
+	HasPublicFavourites *bool      `json:"hasPublicFavourites,omitempty"`
+	LastLoginAt         *time.Time `json:"lastLoginAt,omitempty"`
 }
 
 type CreateUserRequest struct {
@@ -17,12 +20,13 @@ type CreateUserRequest struct {
 }
 
 type UpdateUserRequest struct {
-	Name                *string `json:"name,omitempty"`
-	Email               *string `json:"email,omitempty" binding:"omitempty,email"`
-	IsAdmin             *bool   `json:"isAdmin,omitempty"`
-	Subject             *string `json:"subject,omitempty"`
-	Message             *string `json:"message,omitempty"`
-	HasPublicFavourites *bool   `json:"hasPublicFavourites,omitempty"`
+	Name                *string    `json:"name,omitempty"`
+	Email               *string    `json:"email,omitempty" binding:"omitempty,email"`
+	IsAdmin             *bool      `json:"isAdmin,omitempty"`
+	Subject             *string    `json:"subject,omitempty"`
+	Message             *string    `json:"message,omitempty"`
+	HasPublicFavourites *bool      `json:"hasPublicFavourites,omitempty"`
+	LastLoginAt         *time.Time `json:"lastLoginAt,omitempty"`
 }
 
 type UserWithLatestFavourite struct {
