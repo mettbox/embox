@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "VITE_API_URL=http://192.168.178.194:2705 vite --host",
+    "dev": "VITE_API_URL=http://192.168.178.21:2705 vite --host",
     "build": "vue-tsc && VITE_API_URL=https://em.mettbox.de/api vite build",
     "preview": "VITE_API_URL=http://192.168.178.184:2705 vite preview --host",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
@@ -22,8 +22,6 @@
     "vue": "^3.3.0",
     "vue-i18n": "^11.1.12",
     "vue-router": "^4.2.0",
-    "vue-virtual-scroller": "^2.0.0-beta.8",
-    "vue3-carousel": "^0.16.0",
     "zoompinch": "^0.0.48"
   },
   "devDependencies": {

@@ -10,7 +10,7 @@
         >
           <ion-icon
             slot="icon-only"
-            :icon="cloudUploadOutline"
+            :icon="addCircleOutline"
           />
         </ion-button>
       </template>
@@ -19,6 +19,10 @@
     <ion-content
       :fullscreen="true"
       color="primary"
+      scroll-events
+      @ionScroll="updateVisibleRange"
+      ref="contentRef"
+      class="ion-no-scroll-on-pinch"
     >
       <div
         v-if="hasMediaListLoaded && filteredMediaList.length === 0"
@@ -37,13 +41,27 @@
         </ion-label>
       </ion-item>
 
-      <media-grid
-        :mediaList="filteredMediaList"
-        :columns="isCollection ? app.mediaGridColumns - 1 : app.mediaGridColumns"
-        :isSelectMode="isSelectMode"
-        @update:visible-range="(range: string) => (visibleRange = range)"
-        @media:open="onMediaOpen"
-      />
+      <section
+        class="media-grid"
+        :style="{ '--columns': columns }"
+      >
+        <template
+          v-for="(media, index) in filteredMediaList"
+          :key="media.id"
+        >
+          <div
+            v-if="shouldShowHeader(index)"
+            class="grid-header"
+          >
+            {{ getHeaderLabel(media.date) }}
+          </div>
+          <media-grid-item
+            :is-select-mode="isSelectMode"
+            :media="media"
+            @click="onMediaOpen(media)"
+          />
+        </template>
+      </section>
 
       <media-toolbar
         :sort="sort"
@@ -102,28 +120,22 @@
       @did-dismiss="hasOpenEditMediaModal = false"
       @did-edit="onDidEditMedia"
     />
-
-    <!-- <media-context-popover
-      :is-open="hasOpenContextPopover"
-      @close="onCloseMediaContextPopover"
-      @update:sort="onChangedSort"
-      @update:filter="onChangedFilter"
-      @update:non-public-only="onChangedNonPublicOnly"
-      @favourite:set="onSetFavourites"
-      @favourite:unset="onUnsetFavourites"
-      @public:set="onSetPublic"
-      @public:unset="onUnsetPublic"
-      @album:set="onSelectAlbum"
-      @album:unset="onAlbumUnselect"
-      @edit="onEditMedia"
-      @delete="onDelete"
-    /> -->
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { IonPage, IonContent, IonIcon, IonButton, onIonViewDidEnter, IonItem, IonLabel } from '@ionic/vue';
-import { cloudUploadOutline } from 'ionicons/icons';
+import {
+  IonPage,
+  IonContent,
+  IonIcon,
+  IonButton,
+  onIonViewDidEnter,
+  onIonViewWillEnter,
+  IonItem,
+  IonLabel,
+  createGesture,
+} from '@ionic/vue';
+import { addCircleOutline } from 'ionicons/icons';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAppStore } from '@/stores/app.store';
@@ -136,13 +148,11 @@ import { AlbumService } from '@/services/album.service';
 import mediaSingleModal from '@/components/media/media-single-modal.vue';
 import mediaUploadModal from '@/components/media/media-upload-modal.vue';
 import appHeader from '@/components/app/app-header.vue';
-import mediaGrid from '@/components/media/media-grid.vue';
+import mediaGridItem from '@/components/media/media-grid-item.vue';
 import mediaToolbar from '@/components/media/media-toolbar.vue';
 import albumSelectModal from '@/components/album/album-select-modal.vue';
 import mediaEditModal from '@/components/media/media-edit-modal.vue';
 import { useSelectedMediaStore } from '@/stores/selectedMedia.store';
-import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
-// import mediaContextPopover from '@/components/media/media-context-popover.vue';
 
 const props = defineProps<{
   id?: string;
@@ -201,6 +211,16 @@ const isAdmin = me.isAdmin;
 const { releaseThumbnail } = useThumbnail();
 const selectedMedia = useSelectedMediaStore();
 
+const contentRef = ref<any>(null);
+const columns = ref(4);
+
+onIonViewWillEnter(() => {
+  columns.value = isCollection.value ? app.mediaGridColumns - 1 : app.mediaGridColumns;
+});
+
+let startDistance = 0;
+let initialColumns = columns.value;
+
 const mediaList = ref<Media[]>([]);
 const visibleRange = ref('');
 const hasMediaListLoaded = ref(false);
@@ -225,6 +245,71 @@ const nonPublicOnly = ref<boolean>(false);
 
 const collectionTitle = ref<string>('');
 const collectionDescription = ref<string>('');
+
+const shouldShowHeader = (index: number) => {
+  // no date header if columns are less than 10
+  if (columns.value < 10) return false;
+  const current = filteredMediaList.value[index];
+  if (index === 0) return true;
+  const prev = filteredMediaList.value[index - 1];
+
+  const currentDate = new Date(current.date);
+  const prevDate = new Date(prev.date);
+
+  return currentDate.getMonth() !== prevDate.getMonth() || currentDate.getFullYear() !== prevDate.getFullYear();
+};
+
+const getHeaderLabel = (date: string) => {
+  return new Intl.DateTimeFormat('de-DE', {
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(date));
+};
+
+const updateVisibleRange = () => {
+  const grid = document.querySelector('.media-grid');
+  if (!grid) return;
+
+  const items = Array.from(grid.querySelectorAll('.media-grid-item'));
+  const visibleDates: string[] = [];
+
+  const viewportTop = window.scrollY;
+  const viewportBottom = viewportTop + window.innerHeight;
+
+  items.forEach((item) => {
+    const rect = (item as HTMLElement).getBoundingClientRect();
+    const cellTop = rect.top + window.scrollY;
+    const cellBottom = rect.bottom + window.scrollY;
+
+    if (cellBottom > viewportTop && cellTop < viewportBottom) {
+      const id = (item as HTMLElement).dataset.id;
+      const media = filteredMediaList.value.find((m) => String(m.id) === id);
+      if (media?.date) visibleDates.push(media.date);
+    }
+  });
+
+  if (!visibleDates.length) {
+    visibleRange.value = '';
+    return;
+  }
+
+  visibleDates.sort();
+  const firstDate = new Date(visibleDates[0]);
+  const lastDate = new Date(visibleDates[visibleDates.length - 1]);
+
+  const formatter = new Intl.DateTimeFormat('de-DE', {
+    month: 'short',
+    year: 'numeric',
+  });
+
+  const firstLabel = formatter.format(firstDate);
+  const lastLabel = formatter.format(lastDate);
+
+  visibleRange.value =
+    firstDate.getFullYear() === lastDate.getFullYear() && firstDate.getMonth() === lastDate.getMonth()
+      ? firstLabel
+      : `${firstLabel} – ${lastLabel}`;
+};
 
 const openUploadModal = () => {
   hasOpenUploadModal.value = true;
@@ -521,8 +606,14 @@ const onDelete = async () => {
 };
 
 const onMediaOpen = (media: Media) => {
-  openMedia.value = media;
-  isMediaSingleModalOpen.value = true;
+  if (isSelectMode.value) {
+    const index = selectedMedia.ids.indexOf(media.id);
+    index === -1 ? selectedMedia.add(media) : selectedMedia.remove(media.id);
+  } else {
+    selectedMedia.set(media);
+    openMedia.value = media;
+    isMediaSingleModalOpen.value = true;
+  }
 };
 
 const onCloseMedia = () => {
@@ -530,19 +621,6 @@ const onCloseMedia = () => {
   selectedMedia.clear();
   openMedia.value = null;
 };
-
-// const hasOpenContextPopover = ref(false);
-
-// const onMediaSingleSelect = async (media: Media) => {
-//   selectedMedia.clear();
-//   selectedMedia.add(media);
-//   hasOpenContextPopover.value = true;
-// };
-
-// const onCloseMediaContextPopover = () => {
-//   hasOpenContextPopover.value = false;
-//   selectedMedia.clear();
-// };
 
 const onShowPrevMedia = (id: number) => {
   const currentIndex = filteredMediaList.value.findIndex((m) => m.id === id);
@@ -560,8 +638,90 @@ const onShowNextMedia = (id: number) => {
   }
 };
 
+const initGestures = () => {
+  const contentEl = contentRef.value.$el;
+
+  const gesture = createGesture({
+    el: contentEl,
+    gestureName: 'pinch-zoom',
+    priority: 110, // Higher priority
+    threshold: 0,
+    canStart: (ev) => {
+      const isTwoFingers = (ev.event as TouchEvent).touches?.length === 2;
+      if (isTwoFingers) {
+        // Temporarily lock the element to prevent system gestures
+        contentEl.style.touchAction = 'none';
+      }
+      return isTwoFingers;
+    },
+    onStart: (ev) => {
+      const touches = (ev.event as TouchEvent).touches;
+      if (touches.length === 2) {
+        startDistance = Math.hypot(touches[0].pageX - touches[1].pageX, touches[0].pageY - touches[1].pageY);
+        initialColumns = columns.value;
+      }
+    },
+    onMove: (ev) => {
+      const touches = (ev.event as TouchEvent).touches;
+      if (!touches || touches.length !== 2) return;
+
+      // Absolute prevention of native zoom
+      if (ev.event.cancelable) {
+        ev.event.preventDefault();
+        ev.event.stopPropagation();
+      }
+
+      const currentDistance = Math.hypot(touches[0].pageX - touches[1].pageX, touches[0].pageY - touches[1].pageY);
+
+      if (startDistance === 0) {
+        startDistance = currentDistance;
+        initialColumns = columns.value;
+        return;
+      }
+
+      const scale = currentDistance / startDistance;
+      let targetColumns = initialColumns;
+
+      // Map scale to columns
+      if (scale > 1.05) {
+        const steps = Math.floor((scale - 1) / 0.15);
+        targetColumns = Math.max(1, initialColumns - steps);
+      } else if (scale < 0.95) {
+        const steps = Math.floor((1 - scale) / 0.08);
+        // Allow up to 20 columns
+        targetColumns = Math.min(20, initialColumns + steps);
+      }
+
+      if (targetColumns !== columns.value) {
+        columns.value = targetColumns;
+        updateVisibleRange();
+      }
+    },
+    onEnd: () => {
+      startDistance = 0;
+      // Restore default touch action
+      contentEl.style.touchAction = '';
+    },
+  });
+
+  gesture.enable(true);
+
+  const preventNative = (e: any) => {
+    if (e.touches && e.touches.length > 1) {
+      if (e.cancelable) e.preventDefault();
+    }
+  };
+
+  // Attach to document as well because Safari is stubborn with bubbling
+  document.addEventListener('gesturestart', preventNative, { passive: false });
+  document.addEventListener('gesturechange', preventNative, { passive: false });
+  document.addEventListener('gestureend', preventNative, { passive: false });
+  contentEl.addEventListener('touchmove', preventNative, { passive: false });
+};
+
 onIonViewDidEnter(async () => {
   await load();
+  initGestures();
 });
 </script>
 
@@ -573,5 +733,42 @@ div[slot='fixed'] {
   align-items: center;
   gap: 8px;
   width: 100%;
+}
+
+ion-content {
+  .media-grid {
+    display: grid;
+    /* Use fixed column count for predictability */
+    grid-template-columns: repeat(var(--columns), 1fr);
+    gap: 1px;
+    padding: 1px;
+
+    /* Smooth transitions when column count changes */
+    transition: grid-template-columns 0.3s ease-out;
+
+    .grid-header {
+      grid-column: 1 / -1;
+      padding: 16px 8px 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--ion-color-step-600);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      /* British comment: ensure headers take up a full row and look premium */
+    }
+
+    .media-grid-item {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      display: block;
+      /* British comment: ensure images align perfectly in the grid */
+    }
+  }
+}
+
+/* Safari specific: prevent rubber banding and native zoom interference */
+.ion-no-scroll-on-pinch {
+  touch-action: pan-x pan-y;
 }
 </style>

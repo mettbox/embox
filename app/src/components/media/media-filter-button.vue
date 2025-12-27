@@ -166,7 +166,6 @@ import {
   eyeOff,
 } from 'ionicons/icons';
 import { computed } from 'vue';
-import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 import { useMeStore } from '@/stores/me.store';
 
 const props = defineProps<{

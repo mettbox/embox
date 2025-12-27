@@ -1,28 +1,30 @@
 import { defineStore } from 'pinia';
 import { Mode } from '@ionic/core';
 
+const getBreakpoint = (width: number): ViewSize => {
+  if (width >= 1200) return 'xl';
+  if (width >= 992) return 'lg';
+  if (width >= 768) return 'md';
+  if (width >= 576) return 'sm';
+  return 'xs';
+};
+
 export const useAppStore = defineStore('app', {
   state: () => ({
     loading: false,
     notification: '',
     error: null as Error | unknown | null,
     screenWidth: window.innerWidth,
-    breakpoint: 'xs' as ViewSize,
+    breakpoint: getBreakpoint(window.innerWidth),
     appMode: 'md' as Mode,
     isDarkMode: window.matchMedia('(prefers-color-scheme: dark)').matches,
   }),
 
   actions: {
-    getBreakpoint(width: number): ViewSize {
-      if (width >= 1200) return 'xl';
-      if (width >= 992) return 'lg';
-      if (width >= 768) return 'md';
-      if (width >= 576) return 'sm';
-      return 'xs';
-    },
+    getBreakpoint,
     updateBreakpoint() {
       this.screenWidth = window.innerWidth;
-      this.breakpoint = this.getBreakpoint(this.screenWidth);
+      this.breakpoint = getBreakpoint(this.screenWidth);
     },
 
     /**
