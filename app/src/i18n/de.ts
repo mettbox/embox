@@ -45,6 +45,7 @@ export default {
   'Email address': 'E-Mail-Adresse',
   'You cannot change your own email address.': 'Du kannst deine eigene E-Mail-Adresse nicht ändern.',
   'New User': 'Neuer Benutzer',
+  'Last login': 'Letzter Login',
   // Login page
   registration_intro:
     'Gib bitte die E-Mail-Adresse ein, an die die Einladung zu dieser App geschickt wurde. In einer weiteren Mail erhälst du anschließend einen Login-Code.',

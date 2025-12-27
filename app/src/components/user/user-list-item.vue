@@ -4,6 +4,9 @@
       <ion-label>
         <h3>{{ props.user.name }}</h3>
         <p>{{ props.user.email }}</p>
+        <p v-if="props.user.lastLoginAt">
+          {{ $t('Last login') }}: {{ new Date(props.user.lastLoginAt).toLocaleString() }}
+        </p>
       </ion-label>
     </ion-item>
     <ion-item-options>

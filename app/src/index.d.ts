@@ -18,6 +18,7 @@ declare global {
     email: string;
     isAdmin: boolean;
     hasPublicFavourites?: boolean;
+    lastLoginAt?: string;
   };
 
   type Location = {
