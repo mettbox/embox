@@ -73,7 +73,6 @@ Setup backend:
 - App: `/home/mettbox/public/em.mettbox.de` => https://em.mettbox.de
 - Api: `/home/mettbox/em` => https://em.mettbox.de/api
 
-
 ```sh
 uberspace web backend set em.mettbox.de/api --http --port 2705 --remove-prefix
 ```
@@ -100,6 +99,7 @@ Setup Database
 In uberspace terminal:
 
 ```sh
+cd /home/mettbox/em/embox/api
 go build -o ../../main ./cmd/api/main.go
 chmod +x /home/mettbox/em/main
 ```
@@ -121,4 +121,4 @@ kill <PID>
 
 ```sh
 npm run build
-````
+```
