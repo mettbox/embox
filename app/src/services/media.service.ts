@@ -21,7 +21,7 @@ export const MediaService = {
       caption: file.caption,
       type: file.type, // e.g "image/jpeg"
       fileName: file.fileName, // original file name
-      date: file.date, // yyyy-mm-dd
+      date: file.date ? new Date(file.date).toISOString() : '', // ensure ISO with TZ
     }));
     formData.append('meta', JSON.stringify(meta));
 
@@ -35,7 +35,11 @@ export const MediaService = {
   },
 
   async update(updates: Partial<Media>[]): Promise<void> {
-    const { data } = await httpService('media/', 'put', { updates });
+    const formattedUpdates = updates.map((update) => ({
+      ...update,
+      date: update.date ? new Date(update.date).toISOString() : undefined,
+    }));
+    const { data } = await httpService('media/', 'put', { updates: formattedUpdates });
     return data;
   },
 

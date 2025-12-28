@@ -5,6 +5,7 @@ import (
 	"embox/internal/models"
 	"embox/internal/repositories"
 	"fmt"
+	"time"
 )
 
 type AlbumService struct {
@@ -100,7 +101,7 @@ func (s *AlbumService) GetAlbumList(userEmail string) ([]dto.AlbumResponseDto, e
 				Id:          albumMedia.MediaID,
 				IsFavourite: albumMedia.Media.IsFavourite,
 				Caption:     albumMedia.Media.Caption,
-				Date:        albumMedia.Media.Date.Format("2006-01-02"),
+				Date:        albumMedia.Media.Date.Format(time.RFC3339),
 				Type:        albumMedia.Media.Type,
 				IsCover:     albumMedia.IsCover,
 				CreatedAt:   albumMedia.Media.CreatedAt,
@@ -134,7 +135,7 @@ func (s *AlbumService) GetAlbumByID(id uint) (*dto.AlbumResponseDto, error) {
 			Id:          albumMedia.MediaID,
 			IsFavourite: albumMedia.Media.IsFavourite,
 			Caption:     albumMedia.Media.Caption,
-			Date:        albumMedia.Media.Date.Format("2006-01-02"),
+			Date:        albumMedia.Media.Date.Format(time.RFC3339),
 			Type:        albumMedia.Media.Type,
 			IsCover:     albumMedia.IsCover,
 			CreatedAt:   albumMedia.Media.CreatedAt,

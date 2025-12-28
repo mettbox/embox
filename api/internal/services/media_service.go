@@ -44,7 +44,7 @@ func (s *MediaService) GetMediaList(userEmail string) ([]dto.MediaResponseDto, e
 			Id:          media.ID,
 			IsFavourite: media.IsFavourite,
 			Caption:     media.Caption,
-			Date:        media.Date.Format("2006-01-02"),
+			Date:        media.Date.Format(time.RFC3339),
 			Type:        media.Type,
 			CreatedAt:   media.CreatedAt,
 		})
@@ -113,9 +113,15 @@ func (s *MediaService) CreateFromRequest(meta dto.MediaUploadRequestDto, file io
 		return nil, fmt.Errorf("user not found")
 	}
 
-	parsedDate, err := time.Parse("2006-01-02", meta.Date)
+	// Parse the date string
+	// First try RFC3339 ISO (with timezone, e.g. from EXIF or toISOString())
+	// Then try ISO without timezone (common from ion-datetime)
+	parsedDate, err := time.Parse(time.RFC3339, meta.Date)
 	if err != nil {
-		return nil, fmt.Errorf("invalid date format: %w", err)
+		parsedDate, err = time.Parse("2006-01-02T15:04:05", meta.Date)
+		if err != nil {
+			return nil, fmt.Errorf("invalid date format: %w", err)
+		}
 	}
 
 	media := &models.Media{
@@ -194,7 +200,7 @@ func (s *MediaService) UploadMedia(files []*multipart.FileHeader, metaList []dto
 			Id:          media.ID,
 			IsFavourite: false,
 			Caption:     media.Caption,
-			Date:        media.Date.Format("2006-01-02"),
+			Date:        media.Date.Format(time.RFC3339),
 			Type:        media.Type,
 			CreatedAt:   media.CreatedAt,
 		})
@@ -229,10 +235,13 @@ func (s *MediaService) UpdateMediaBatch(updates []dto.MediaUpdateRequestDto, use
 		}
 
 		if update.Date != nil {
-			parsedDate, err := time.Parse("2006-01-02", *update.Date)
+			parsedDate, err := time.Parse(time.RFC3339, *update.Date)
 			if err != nil {
-				updateErrors = append(updateErrors, fmt.Sprintf("invalid date format for media ID %d: %v", update.ID, err))
-				continue
+				parsedDate, err = time.Parse("2006-01-02T15:04:05", *update.Date)
+				if err != nil {
+					updateErrors = append(updateErrors, fmt.Sprintf("invalid date format for media ID %d: %v", update.ID, err))
+					continue
+				}
 			}
 			existingMedia.Date = parsedDate
 		}
@@ -246,7 +255,7 @@ func (s *MediaService) UpdateMediaBatch(updates []dto.MediaUpdateRequestDto, use
 			Id:          existingMedia.ID,
 			IsFavourite: existingMedia.IsFavourite,
 			Caption:     existingMedia.Caption,
-			Date:        existingMedia.Date.Format("2006-01-02"),
+			Date:        existingMedia.Date.Format(time.RFC3339),
 			Type:        existingMedia.Type,
 			CreatedAt:   existingMedia.CreatedAt,
 		})

@@ -9,7 +9,7 @@
       :value="props.modelValue"
       :first-day-of-week="1"
       :prefer-wheel="true"
-      presentation="date"
+      presentation="date-time"
     >
       <ion-buttons slot="buttons">
         <ion-button
@@ -84,7 +84,7 @@ const confirm = () => {
   if (datetimeElem.value) {
     datetimeElem.value.$el.confirm();
   }
-  const value = datetimeElem.value?.$el.value?.slice(0, 10) ?? '';
+  const value = datetimeElem.value?.$el.value ?? '';
 
   emit('update:modelValue', value);
   if (modalElem.value) {
@@ -96,7 +96,7 @@ const setAll = () => {
   if (datetimeElem.value) {
     datetimeElem.value.$el.confirm();
   }
-  const value = datetimeElem.value?.$el.value?.slice(0, 10) ?? '';
+  const value = datetimeElem.value?.$el.value ?? '';
 
   emit('update:all', value);
   if (modalElem.value) {

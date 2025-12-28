@@ -241,11 +241,8 @@ const onFileChange = async (e: Event) => {
         const exif = await exifr.parse(file, {
           exif: true,
         });
-        if (exif) {
-          if (exif.DateTimeOriginal) {
-            const d = new Date(exif.DateTimeOriginal);
-            date = d.toISOString().slice(0, 10); // yyyy-mm-dd
-          }
+        if (exif && exif.DateTimeOriginal) {
+          date = new Date(exif.DateTimeOriginal).toISOString();
         }
       } catch (err) {
         console.warn('EXIF extraction failed', err);
