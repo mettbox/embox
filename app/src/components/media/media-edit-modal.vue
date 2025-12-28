@@ -27,7 +27,7 @@
           :key="media.id"
         >
           <ion-thumbnail slot="start">
-            <ion-img :src="media.thumbUrl" />
+            <ion-img :src="getThumbnailUrl(media.id)" />
           </ion-thumbnail>
 
           <ion-label>
@@ -81,6 +81,7 @@ import {
 import { ref } from 'vue';
 import { close, saveOutline } from 'ionicons/icons';
 import { useSelectedMediaStore } from '@/stores/selectedMedia.store';
+import { useThumbnail } from '@/composables/use-thumbnail';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -93,6 +94,7 @@ const emit = defineEmits<{
 
 const modalRef = ref<InstanceType<typeof IonModal> | null>(null);
 const selectedMedia = useSelectedMediaStore();
+const { getThumbnailUrl } = useThumbnail();
 const items = ref<Media[]>([]);
 
 const onClose = () => {
@@ -129,16 +131,6 @@ const onWillPresent = async () => {
     align-items: center;
     overflow: hidden;
     background-color: var(--ion-color-light);
-
-    ion-img {
-      opacity: 0.6;
-    }
-
-    &.is-public {
-      ion-img {
-        opacity: 1;
-      }
-    }
 
     ion-icon {
       position: absolute;

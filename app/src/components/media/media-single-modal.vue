@@ -52,31 +52,29 @@
         <ion-spinner v-if="!isMediaLoaded" />
         <video
           v-if="media.type === 'video'"
-          v-show="isMediaLoaded && !isZoomMode"
+          :class="{ 'main-media': true, loaded: isMediaLoaded && !isZoomMode }"
           :key="'video-' + media.id"
           :src="fileUrl"
           controls
-          :poster="getThumbnailUrl(media.id)"
+          :poster="media.thumbUrl"
           @loadeddata="onMediaLoaded"
-          class="main-media"
         />
         <audio
           v-else-if="media.type === 'audio'"
-          v-show="isMediaLoaded && !isZoomMode"
+          :class="{ 'main-media': true, loaded: isMediaLoaded && !isZoomMode }"
           :key="'audio-' + media.id"
           :src="fileUrl"
           controls
           @loadeddata="onMediaLoaded"
-          class="main-media"
         />
         <img
           v-else-if="media.type === 'image'"
-          v-show="isMediaLoaded && !isZoomMode"
+          :class="{ 'main-media': true, loaded: isMediaLoaded && !isZoomMode }"
           :key="'img-' + media.id"
           :src="fileUrl"
+          :draggable="false"
           @load="onMediaLoaded"
           @click="setZoomMode(true)"
-          class="main-media"
         />
         <media-zoom
           v-if="isZoomMode"
@@ -294,21 +292,20 @@ const initSwipe = async () => {
     el: gestureEl,
     gestureName: 'swipe',
     direction: 'x',
-    threshold: 10,
+    threshold: 15, // Slightly higher threshold for better iOS feel
     onMove(ev) {
-      if (ev.deltaX > 50) {
-        // stop further detection until next media is shown
+      if (ev.deltaX > 60) {
         gesture.value?.enable(false);
         onPrev();
-      } else if (ev.deltaX < -50) {
-        // stop further detection until next media is shown
+      } else if (ev.deltaX < -60) {
         gesture.value?.enable(false);
         onNext();
       }
-      // avoid immediate re-triggering and skip files
+
+      // Re-enable after animation is definitely finished
       setTimeout(() => {
         gesture.value?.enable(true);
-      }, 200);
+      }, 350);
     },
   });
   gesture.value.enable(true);
@@ -346,17 +343,8 @@ ion-modal {
   --border-radius: 0;
 }
 
-.media-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  width: 100%;
-}
-
-ion-img,
-video,
 .main-media {
+  position: absolute;
   display: block;
   margin-left: auto;
   margin-right: auto;
@@ -364,6 +352,41 @@ video,
   height: 100%;
   max-width: 100%;
   object-fit: contain;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none; /* Prevent intercepting clicks when hidden or loading */
+}
+
+.main-media.loaded {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Audio shouldn't stretch to full height */
+audio.main-media {
+  height: auto;
+}
+
+.media-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ensure zoom component takes full space */
+.media-wrapper > :deep(.projection-wrapper) {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
 }
 
 audio {
