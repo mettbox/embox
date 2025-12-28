@@ -19,6 +19,7 @@
       @favourite:unset="emit('favourite:unset')"
       @album:select="emit('album:select')"
       @album:unselect="emit('album:unselect')"
+      @album:cover="emit('album:cover')"
       @public:set="$emit('public:set')"
       @public:unset="$emit('public:unset')"
       @edit="emit('edit')"
@@ -47,6 +48,7 @@ const emit = defineEmits<{
   (e: 'favourite:unset'): void;
   (e: 'album:select'): void;
   (e: 'album:unselect'): void;
+  (e: 'album:cover'): void;
   (e: 'public:set'): void;
   (e: 'public:unset'): void;
   (e: 'edit'): void;

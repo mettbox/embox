@@ -46,6 +46,10 @@ export const AlbumService = {
     return data;
   },
 
+  async setCover(albumId: number, mediaId: number): Promise<void> {
+    await httpService(`album/${albumId}/cover`, 'put', { mediaId });
+  },
+
   async addMedia(albumId: number, mediaIds: number[]): Promise<void> {
     await httpService(`album/${albumId}/media`, 'post', { mediaIds });
   },

@@ -72,6 +72,22 @@
           </ion-item>
 
           <ion-item
+            v-if="selectedMedia.isAlbum && selectedMedia.ids.length === 1"
+            :button="true"
+            :detail="false"
+            lines="full"
+            @click="$emit('album:cover')"
+          >
+            <ion-icon
+              slot="end"
+              size="small"
+              :icon="bookmarkOutline"
+              color="medium"
+            />
+            <ion-label>{{ $t('Set as Cover') }}</ion-label>
+          </ion-item>
+
+          <ion-item
             :button="true"
             :detail="false"
             lines="full"
@@ -117,7 +133,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { IonPopover, IonContent, IonList, IonItem, IonIcon, IonLabel } from '@ionic/vue';
-import { heartOutline, heartDislikeOutline, albumsOutline, trashBinOutline, createOutline } from 'ionicons/icons';
+import {
+  heartOutline,
+  heartDislikeOutline,
+  albumsOutline,
+  trashBinOutline,
+  createOutline,
+  bookmarkOutline,
+} from 'ionicons/icons';
 import { useI18n } from 'vue-i18n';
 import { ActionSheetButton, IonActionSheet } from '@ionic/vue';
 import { useSelectedMediaStore } from '@/stores/selectedMedia.store';
@@ -132,6 +155,7 @@ const emit = defineEmits<{
   (e: 'favourite:unset'): void;
   (e: 'album:set'): void;
   (e: 'album:unset'): void;
+  (e: 'album:cover'): void;
   (e: 'public:set'): void;
   (e: 'public:unset'): void;
   (e: 'edit'): void;

@@ -76,6 +76,7 @@
         @favourite:unset="onUnsetFavourites"
         @album:select="onSelectAlbum"
         @album:unselect="onAlbumUnselect"
+        @album:cover="onAlbumCoverSet"
         @edit="onEditMedia"
         @delete="onDelete"
       />
@@ -93,6 +94,7 @@
       @favourite:unset="onUnsetFavourites"
       @album:select="onSelectAlbum"
       @album:unselect="onAlbumUnselect"
+      @album:cover="onAlbumCoverSet"
       @edit="onEditMedia"
       @delete="onDelete"
     />
@@ -389,7 +391,6 @@ const onChangedNonPublicOnly = (newPublicOnly: boolean) => {
 };
 
 const onSetFavourites = async () => {
-  // hasOpenContextPopover.value = false;
   if (selectedMedia.ids.length === 0) return;
 
   try {
@@ -416,7 +417,6 @@ const onSetFavourites = async () => {
 };
 
 const onUnsetFavourites = async () => {
-  // hasOpenContextPopover.value = false;
   if (selectedMedia.ids.length === 0) return;
 
   try {
@@ -443,12 +443,10 @@ const onUnsetFavourites = async () => {
 };
 
 const onSelectAlbum = async () => {
-  // hasOpenContextPopover.value = false;
   hasOpenAlbumModal.value = true;
 };
 
 const onAlbumSelected = async (id: number) => {
-  // hasOpenContextPopover.value = false;
   if (selectedMedia.ids.length === 0) {
     hasOpenAlbumModal.value = false;
     return;
@@ -468,7 +466,6 @@ const onAlbumSelected = async (id: number) => {
 };
 
 const onAlbumUnselect = async () => {
-  // hasOpenContextPopover.value = false;
   if (route.name !== 'albums' || !props.id || selectedMedia.ids.length === 0) {
     return;
   }
@@ -485,8 +482,23 @@ const onAlbumUnselect = async () => {
   }
 };
 
+const onAlbumCoverSet = async () => {
+  if (route.name !== 'albums' || !props.id || selectedMedia.ids.length === 0) {
+    return;
+  }
+
+  try {
+    await AlbumService.setCover(Number(props.id), selectedMedia.ids[0]);
+    app.setNotification(t('Set cover for album'));
+  } catch (error: unknown) {
+    app.setNotification(t('Failed to set cover for album'), error);
+  } finally {
+    selectedMedia.clear();
+    isSelectMode.value = false;
+  }
+};
+
 const onEditMedia = () => {
-  // hasOpenContextPopover.value = false;
   if (selectedMedia.ids.length === 0) return;
   hasOpenEditMediaModal.value = true;
 };
@@ -524,7 +536,6 @@ const onDidEditMedia = async (items: Partial<Media>[]) => {
 };
 
 const onDelete = async () => {
-  // hasOpenContextPopover.value = false;
   if (selectedMedia.ids.length === 0) return;
 
   try {
