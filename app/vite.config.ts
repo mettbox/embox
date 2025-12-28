@@ -20,7 +20,7 @@ const pwa: Partial<VitePWAOptions> = {
         options: {
           cacheName: 'assets-cache',
           expiration: {
-            maxEntries: 200,
+            maxEntries: 1000,
             maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
           },
         },

@@ -12,7 +12,7 @@
     </ion-thumbnail>
     <ion-img
       v-else
-      :src="props.media.thumbUrl || (loadThumbnail(props.media), '')"
+      :src="getThumbnailUrl(props.media.id)"
     />
     <ion-icon
       v-if="props.media.isFavourite"
@@ -53,7 +53,7 @@ const props = defineProps<{
   isSingleColumn?: boolean;
 }>();
 
-const { loadThumbnail } = useThumbnail();
+const { getThumbnailUrl } = useThumbnail();
 const selectedMedia = useSelectedMediaStore();
 </script>
 

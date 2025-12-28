@@ -100,6 +100,7 @@ In uberspace terminal:
 
 ```sh
 cd /home/mettbox/em/embox/api
+git pull
 go build -o ../../main ./cmd/api/main.go
 chmod +x /home/mettbox/em/main
 ```
@@ -107,6 +108,7 @@ chmod +x /home/mettbox/em/main
 Run binary deteched:
 
 ```sh
+cd /home/mettbox/em
 nohup ./main > /dev/null 2>&1 &
 ```
 

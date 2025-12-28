@@ -114,7 +114,6 @@
     />
 
     <media-edit-modal
-      ref="editMediaModalRef"
       :is-open="hasOpenEditMediaModal"
       @did-dismiss="hasOpenEditMediaModal = false"
       @did-edit="onDidEditMedia"
@@ -204,45 +203,31 @@ const route = useRoute();
 const router = useRouter();
 const app = useAppStore();
 const me = useMeStore();
-const isAdmin = me.isAdmin;
-
-const { releaseThumbnail } = useThumbnail();
+const { getThumbnailUrl } = useThumbnail();
 const selectedMedia = useSelectedMediaStore();
-
-const contentRef = ref<any>(null);
-const columns = ref(4);
-
-onIonViewWillEnter(() => {
-  columns.value = isCollection.value ? app.mediaGridColumns - 1 : app.mediaGridColumns;
-});
-
-let startDistance = 0;
-let initialColumns = columns.value;
 
 const mediaList = ref<Media[]>([]);
 const visibleRange = ref('');
 const hasMediaListLoaded = ref(false);
-
 const uploadModalRef = ref<InstanceType<typeof mediaUploadModal> | null>(null);
 const hasOpenUploadModal = ref(false);
-
-const editMediaModalRef = ref<InstanceType<typeof mediaEditModal> | null>(null);
 const hasOpenEditMediaModal = ref(false);
-
 const hasOpenAlbumModal = ref(false);
-
 const openMedia = ref<any>(null);
 const isMediaSingleModalOpen = ref(false);
-
 const isSelectMode = ref(false);
-
 const sort = ref<'asc' | 'desc'>('desc');
 const mediatype = ref<'image' | 'video' | 'audio' | ''>('');
 const favourites = ref<boolean>(false);
 const nonPublicOnly = ref<boolean>(false);
-
 const collectionTitle = ref<string>('');
 const collectionDescription = ref<string>('');
+const contentRef = ref<InstanceType<typeof IonContent> | null>(null);
+const columns = ref(4);
+
+const isAdmin = me.isAdmin;
+let startDistance = 0;
+let initialColumns = columns.value;
 
 const shouldShowHeader = (index: number) => {
   // no date header if columns are less than 10
@@ -543,7 +528,6 @@ const onDelete = async () => {
     const ids = selectedMedia.ids;
     const mediaToDelete = mediaList.value.filter((media) => ids.includes(media.id));
     mediaList.value = mediaList.value.filter((media) => !ids.includes(media.id));
-    mediaToDelete.forEach((media) => releaseThumbnail(media));
 
     // Important: small delay to allow UI to update before deletion
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -592,6 +576,8 @@ const onShowNextMedia = (id: number) => {
 };
 
 const initGestures = () => {
+  if (!contentRef.value) return;
+
   const contentEl = contentRef.value.$el;
 
   const gesture = createGesture({
@@ -671,6 +657,10 @@ const initGestures = () => {
   document.addEventListener('gestureend', preventNative, { passive: false });
   contentEl.addEventListener('touchmove', preventNative, { passive: false });
 };
+
+onIonViewWillEnter(() => {
+  columns.value = isCollection.value ? app.mediaGridColumns - 1 : app.mediaGridColumns;
+});
 
 onIonViewDidEnter(async () => {
   await load();

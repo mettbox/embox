@@ -8,7 +8,7 @@
       <ion-thumbnail slot="start">
         <ion-img
           v-if="item.media"
-          :src="item.media.thumbUrl || (loadThumbnail(item.media), '')"
+          :src="getThumbnailUrl(item.media.id)"
         />
       </ion-thumbnail>
       <ion-label>
@@ -74,7 +74,7 @@ const emit = defineEmits<{
   (e: 'remove', item: CollectionListItem): void;
 }>();
 
-const { loadThumbnail } = useThumbnail();
+const { getThumbnailUrl } = useThumbnail();
 
 const itemRef = ref<VueInstanceElement>();
 

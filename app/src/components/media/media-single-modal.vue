@@ -49,25 +49,37 @@
         class="media-wrapper"
         ref="mediaWrapperRef"
       >
+        <ion-spinner v-if="!isMediaLoaded" />
         <video
-          v-show="!isZoomMode && media.type === 'video'"
+          v-if="media.type === 'video'"
+          v-show="isMediaLoaded && !isZoomMode"
+          :key="'video-' + media.id"
           :src="fileUrl"
           controls
-          :poster="media.thumbUrl"
+          :poster="getThumbnailUrl(media.id)"
+          @loadeddata="onMediaLoaded"
+          class="main-media"
         />
         <audio
-          v-show="!isZoomMode && media.type === 'audio'"
+          v-else-if="media.type === 'audio'"
+          v-show="isMediaLoaded && !isZoomMode"
+          :key="'audio-' + media.id"
           :src="fileUrl"
           controls
+          @loadeddata="onMediaLoaded"
+          class="main-media"
         />
-        <ion-img
-          v-show="!isZoomMode && media.type === 'image'"
-          :draggable="false"
+        <img
+          v-else-if="media.type === 'image'"
+          v-show="isMediaLoaded && !isZoomMode"
+          :key="'img-' + media.id"
           :src="fileUrl"
+          @load="onMediaLoaded"
           @click="setZoomMode(true)"
+          class="main-media"
         />
         <media-zoom
-          v-show="isZoomMode"
+          v-if="isZoomMode"
           :is-open="isZoomMode"
           :file-url="fileUrl"
           @close="setZoomMode(false)"
@@ -77,7 +89,7 @@
         v-else
         class="media-wrapper"
       >
-        <ion-spinner></ion-spinner>
+        <ion-spinner />
       </div>
     </ion-content>
 
@@ -130,7 +142,6 @@
 <script setup lang="ts">
 import {
   IonModal,
-  IonImg,
   IonButton,
   IonContent,
   IonTitle,
@@ -147,10 +158,10 @@ import { onMounted, onUnmounted, ref, nextTick, computed, watch } from 'vue';
 import { createGesture } from '@ionic/vue';
 import { heart, close, ellipsisHorizontalCircleOutline, heartOutline } from 'ionicons/icons';
 import mediaSelectPopover from './media-select-popover.vue';
-import { MediaService } from '@/services/media.service';
 import mediaZoom from './media-zoom.vue';
 import { useThemeColor } from '@/composables/use-theme-color';
 import { useMeStore } from '@/stores/me.store';
+import { useThumbnail } from '@/composables/use-thumbnail';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -182,57 +193,60 @@ const localizedDate = computed(() => {
 
 const { setThemeColor } = useThemeColor();
 const me = useMeStore();
+const { getFileUrl, getThumbnailUrl } = useThumbnail();
 
 const modalRef = ref<InstanceType<typeof IonModal> | null>(null);
 const mediaWrapperRef = ref<HTMLElement | null>(null);
 const gesture = ref<ReturnType<typeof createGesture> | null>(null);
 const fileUrl = ref<string | undefined>(undefined);
-
-const isAdmin = me.isAdmin;
 const isZoomMode = ref(false);
-
 const prevFileUrl = ref<string | null>(null);
 const nextFileUrl = ref<string | null>(null);
 
+const isAdmin = me.isAdmin;
+
+const isMediaLoaded = ref(false);
+
+const onMediaLoaded = () => {
+  isMediaLoaded.value = true;
+};
+
+/**
+ * Preloads a media URL into the browser cache.
+ */
+const preloadMedia = (url: string | null) => {
+  if (!url) return;
+  const img = new Image();
+  img.src = url;
+};
+
 watch(
   () => props.media,
-  async (newMedia, oldMedia) => {
+  (newMedia, oldMedia) => {
+    // Only reset if it's actually a different media file
+    if (newMedia?.id === oldMedia?.id && fileUrl.value) return;
+
+    isMediaLoaded.value = false;
     if (!newMedia) return;
+    fileUrl.value = getFileUrl(newMedia.id);
 
-    fileUrl.value = undefined;
-    await load();
+    // Set URLs for transitions
+    prevFileUrl.value = props.prevMediaId ? getFileUrl(props.prevMediaId) : null;
+    nextFileUrl.value = props.nextMediaId ? getFileUrl(props.nextMediaId) : null;
 
-    if (oldMedia?.id && oldMedia.id !== props.prevMediaId && oldMedia.id !== props.nextMediaId) {
-      clearMediaCache(oldMedia.id);
-    }
-
-    const [prevUrl, nextUrl] = await Promise.all([
-      props.prevMediaId ? preloadImage(props.prevMediaId) : null,
-      props.nextMediaId ? preloadImage(props.nextMediaId) : null,
-    ]);
-
-    prevFileUrl.value = prevUrl;
-    nextFileUrl.value = nextUrl;
+    // Actively preload adjacent items
+    preloadMedia(prevFileUrl.value);
+    preloadMedia(nextFileUrl.value);
   },
   { immediate: true },
 );
 
 const load = async () => {
-  try {
-    const blob = await MediaService.getMediaFile(props.media.id);
-    fileUrl.value = URL.createObjectURL(blob);
-  } catch (error) {
-    console.error('Failed to load media file:', error);
-    fileUrl.value = '';
-  }
+  // Direct URL is set in watch, no further action needed
 };
 
 const onClose = () => {
-  if (fileUrl.value) {
-    // Release the object URL to free up memory
-    URL.revokeObjectURL(fileUrl.value);
-    fileUrl.value = undefined;
-  }
+  fileUrl.value = undefined;
   setZoomMode(false);
   if (modalRef.value) {
     modalRef.value.$el.dismiss(null, 'cancel');
@@ -258,58 +272,18 @@ const slideOut = async (direction: 'left' | 'right') => {
 
 const onPrev = async () => {
   if (!props.prevMediaId || isZoomMode.value) return;
-
   await slideOut('right');
-  if (prevFileUrl.value) {
-    fileUrl.value = prevFileUrl.value;
-  }
+  isMediaLoaded.value = false;
+  fileUrl.value = undefined; // Trigger loading spinner
   emit('prev', props.media.id);
 };
 
 const onNext = async () => {
   if (!props.nextMediaId || isZoomMode.value) return;
-
   await slideOut('left');
-  if (nextFileUrl.value) {
-    fileUrl.value = nextFileUrl.value;
-  }
+  isMediaLoaded.value = false;
+  fileUrl.value = undefined; // Trigger loading spinner
   emit('next', props.media.id);
-};
-
-const mediaCache = new Map<number, string>();
-
-const preloadImage = async (mediaId: number) => {
-  if (mediaCache.has(mediaId)) {
-    return mediaCache.get(mediaId)!;
-  }
-
-  try {
-    const blob = await MediaService.getMediaFile(mediaId);
-    const url = URL.createObjectURL(blob);
-    mediaCache.set(mediaId, url);
-    return url;
-  } catch (error) {
-    console.error(`Failed to preload media file with ID ${mediaId}:`, error);
-    return null;
-  }
-};
-
-const clearMediaCache = (mediaId: number) => {
-  if (mediaCache.has(mediaId)) {
-    URL.revokeObjectURL(mediaCache.get(mediaId)!);
-    mediaCache.delete(mediaId);
-  }
-};
-
-const clearPreloadedUrls = () => {
-  if (prevFileUrl.value) {
-    URL.revokeObjectURL(prevFileUrl.value);
-    prevFileUrl.value = null;
-  }
-  if (nextFileUrl.value) {
-    URL.revokeObjectURL(nextFileUrl.value);
-    nextFileUrl.value = null;
-  }
 };
 
 const initSwipe = async () => {
@@ -362,11 +336,6 @@ onUnmounted(() => {
   if (gesture.value) {
     gesture.value.destroy();
   }
-  clearPreloadedUrls();
-
-  // Clear cache
-  mediaCache.forEach((url) => URL.revokeObjectURL(url));
-  mediaCache.clear();
 });
 </script>
 
@@ -386,13 +355,15 @@ ion-modal {
 }
 
 ion-img,
-video {
+video,
+.main-media {
   display: block;
   margin-left: auto;
   margin-right: auto;
   width: auto;
   height: 100%;
   max-width: 100%;
+  object-fit: contain;
 }
 
 audio {

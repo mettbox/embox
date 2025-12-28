@@ -55,6 +55,7 @@ func (h *MediaHandler) GetMediaThumbnail(c *gin.Context) {
 		return
 	}
 
+	c.Header("Cache-Control", "public, max-age=31536000, immutable")
 	c.Data(200, mimeType, data)
 }
 
@@ -70,6 +71,8 @@ func (h *MediaHandler) GetMediaFile(c *gin.Context) {
 		response.JSONError(c, http.StatusNotFound, "File not found", err.Error())
 		return
 	}
+
+	c.Header("Cache-Control", "public, max-age=31536000, immutable")
 	c.Data(200, mimeType, data)
 }
 
