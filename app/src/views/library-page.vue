@@ -58,6 +58,7 @@
           <media-grid-item
             :is-select-mode="isSelectMode"
             :media="media"
+            :is-single-column="columns === 1"
             @click="onMediaOpen(media)"
           />
         </template>
@@ -245,7 +246,7 @@ const collectionDescription = ref<string>('');
 
 const shouldShowHeader = (index: number) => {
   // no date header if columns are less than 10
-  if (columns.value < 10) return false;
+  if (columns.value < 8) return false;
   const current = filteredMediaList.value[index];
   if (index === 0) return true;
   const prev = filteredMediaList.value[index - 1];
@@ -700,21 +701,8 @@ ion-content {
 
     .grid-header {
       grid-column: 1 / -1;
-      padding: 16px 8px 8px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--ion-color-step-600);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      /* British comment: ensure headers take up a full row and look premium */
-    }
-
-    .media-grid-item {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      object-fit: cover;
-      display: block;
-      /* British comment: ensure images align perfectly in the grid */
+      padding: var(--ion-padding-half, 8px) var(--ion-padding, 16px);
+      font-size: 0.875rem;
     }
   }
 }
