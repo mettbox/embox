@@ -10,10 +10,6 @@ export const useSelectedMediaStore = defineStore('selectedMedia', {
     all: (state) => state.selectedMedias,
     first: (state) => (state.selectedMedias.length > 0 ? state.selectedMedias[0] : null),
 
-    hasPublicOnly: (state) => state.selectedMedias.length > 0 && state.selectedMedias.every((media) => media.isPublic),
-    hasNonPublicOnly: (state) =>
-      state.selectedMedias.length > 0 && state.selectedMedias.every((media) => !media.isPublic),
-
     hasFavouriteOnly: (state) =>
       state.selectedMedias.length > 0 && state.selectedMedias.every((media) => media.isFavourite),
     hasNonFavouriteOnly: (state) =>

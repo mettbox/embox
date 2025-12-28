@@ -56,11 +56,11 @@ func getFileExt(fileName string) string {
 
 // convertToWebP converts the given image data to WebP format with specified size and quality.
 func (s *MediaService) convertToWebP(data []byte) ([]byte, error) {
-	result, err := webpconv.ConvertToWebP(data, imgMaxSize, imgQuality)
+	bytes, err := webpconv.ConvertToWebP(data, imgMaxSize, imgQuality)
 	if err != nil {
 		return nil, err
 	}
-	return result.Data, nil
+	return bytes, nil
 }
 
 // generateVideoPoster extracts a poster image from the video and converts it to WebP format.
@@ -88,10 +88,10 @@ func (s *MediaService) generateVideoPoster(media *models.Media, videoData []byte
 		return nil, fmt.Errorf("failed to read poster image: %w", err)
 	}
 
-	webpData, err := s.convertToWebP(posterData)
+	bytes, err := s.convertToWebP(posterData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert poster to webp: %w", err)
 	}
 
-	return webpData, nil
+	return bytes, nil
 }

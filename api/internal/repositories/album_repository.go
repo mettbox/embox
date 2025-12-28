@@ -22,16 +22,10 @@ func (r *albumRepository) Update(album *models.Album) error {
 	return r.db.Save(album).Error
 }
 
-func (r *albumRepository) Get(isAdmin bool) ([]*models.Album, error) {
-	var albums []*models.Album
+func (r *albumRepository) Get() ([]*AlbumListItem, error) {
+	var albums []*AlbumListItem
 
-	query := r.db
-
-	if !isAdmin {
-		query = query.Where("is_public = ?", true)
-	}
-
-	err := query.
+	err := r.db.
 		Preload("Media").
 		Preload("AlbumMedia.Media").
 		Preload("AlbumMedia", func(db *gorm.DB) *gorm.DB {
@@ -46,7 +40,6 @@ func (r *albumRepository) Get(isAdmin bool) ([]*models.Album, error) {
             WHERE album_media.album_id = albums.id
         ) as media_count
     `).
-		// Debug(). // useful for debugging SQL queries
 		Find(&albums).Error
 
 	if err != nil {
@@ -54,7 +47,7 @@ func (r *albumRepository) Get(isAdmin bool) ([]*models.Album, error) {
 	}
 
 	if albums == nil {
-		albums = []*models.Album{}
+		albums = []*AlbumListItem{}
 	}
 
 	return albums, nil

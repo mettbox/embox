@@ -75,8 +75,6 @@ export default {
   Photos: 'Fotos',
   Videos: 'Videos',
   Audios: 'Audios',
-  'Public only': 'Nur öffentliche',
-  'Non public only': 'Nur nicht-öffentliche',
   Favourite: 'Favorit',
   'No Favourite': 'Kein Favorit',
   'Add to Album': 'Zum Album hinzufügen',
@@ -91,14 +89,6 @@ export default {
   'Failed to add favourites': 'Hinzufügen zu Favoriten fehlgeschlagen',
   'Removed favourites': '{count} Favoriten entfernt',
   'Failed to remove favourites': 'Entfernen von Favoriten fehlgeschlagen',
-  'Set public': '{count} öffentlich gemacht',
-  'Failed to set public': 'Öffentlich machen fehlgeschlagen',
-  'Set non public': '{count} nicht öffentlich gemacht',
-  'Failed to set non public': 'Nicht öffentlich machen fehlgeschlagen',
-  // Media Detail sidebar
-  Public: 'Öffentlich',
-  'Non Public': 'Nicht Öffentlich',
-  // Media Detail modal
   // Profile page
   'Failed to update profile': 'Aktualisieren des Profils fehlgeschlagen',
   Profile: 'Profil',
@@ -115,10 +105,6 @@ export default {
   'Profile updated': 'Profil wurde aktualisiert',
   'You will be logged out and need to login again after changing your email address.':
     'Wenn du deine E-Mail-Adresse änderst, wirst du abgemeldet und musst dich erneut anmelden.',
-  'My favourites are public': 'Meine Favoriten sind öffentlich',
-  'Updated public favourites setting': 'Einstellung für öffentliche Favoriten wurde aktualisiert',
-  'Failed to update public favourites setting':
-    'Aktualisieren der Einstellung für öffentliche Favoriten fehlgeschlagen',
   // Collections page
   "Favourite's": '{name}s Favoriten',
   'Failed to edit album': 'Bearbeiten des Albums fehlgeschlagen',
@@ -128,7 +114,6 @@ export default {
   'Enter an Album name…': 'Gib einen Albumnamen ein…',
   'Please enter an album name': 'Bitte gib einen Albumnamen ein',
   'Enter an album description…': 'Gib eine Album-Beschreibung ein…',
-  'Is public': 'Ist öffentlich',
   Description: 'Beschreibung',
   // Album modal
   Select: 'Auswählen',

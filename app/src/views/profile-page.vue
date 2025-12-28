@@ -52,19 +52,6 @@
         </ion-radio-group>
 
         <ion-item-divider>
-          <ion-label>{{ $t('Favourites') }}</ion-label>
-        </ion-item-divider>
-        <ion-item>
-          <ion-toggle
-            justify="space-between"
-            :checked="me.hasPublicFavourites"
-            @ionChange="onTogglePublicFavourites"
-          >
-            {{ $t('My favourites are public') }}
-          </ion-toggle>
-        </ion-item>
-
-        <ion-item-divider>
           <ion-label>{{ $t('Profile') }}</ion-label>
         </ion-item-divider>
         <ion-item>
@@ -132,7 +119,6 @@ import {
   IonPage,
   onIonViewDidEnter,
   IonList,
-  IonToggle,
   IonItem,
   IonRadioGroup,
   IonRadio,
@@ -205,17 +191,6 @@ const fields: Record<string, FormField> = {
 };
 
 const { validateField, validateAllFields, isFormValid, fieldErrors, isTouched } = useValidation(fields, form);
-
-const onTogglePublicFavourites = async (event: CustomEvent) => {
-  const newValue = event.detail.checked;
-
-  try {
-    await me.update({ hasPublicFavourites: newValue });
-    app.setNotification(t('Updated public favourites setting'));
-  } catch (error: unknown) {
-    app.setNotification(t('Failed to update public favourites setting'), error);
-  }
-};
 
 const updateProfile = async () => {
   validateAllFields();

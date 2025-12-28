@@ -72,38 +72,6 @@
           </ion-item>
 
           <ion-item
-            v-if="!selectedMedia.hasPublicOnly"
-            :button="true"
-            :detail="false"
-            lines="full"
-            @click="$emit('public:set')"
-          >
-            <ion-icon
-              slot="end"
-              size="small"
-              :icon="eyeOutline"
-              color="medium"
-            />
-            <ion-label>{{ $t('Public') }}</ion-label>
-          </ion-item>
-
-          <ion-item
-            v-if="!selectedMedia.hasNonPublicOnly"
-            :button="true"
-            :detail="false"
-            lines="full"
-            @click="$emit('public:unset')"
-          >
-            <ion-icon
-              slot="end"
-              size="small"
-              :icon="eyeOffOutline"
-              color="medium"
-            />
-            <ion-label>{{ $t('Non Public') }}</ion-label>
-          </ion-item>
-
-          <ion-item
             :button="true"
             :detail="false"
             lines="full"
@@ -149,15 +117,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { IonPopover, IonContent, IonList, IonItem, IonIcon, IonLabel } from '@ionic/vue';
-import {
-  heartOutline,
-  heartDislikeOutline,
-  albumsOutline,
-  trashBinOutline,
-  createOutline,
-  eyeOffOutline,
-  eyeOutline,
-} from 'ionicons/icons';
+import { heartOutline, heartDislikeOutline, albumsOutline, trashBinOutline, createOutline } from 'ionicons/icons';
 import { useI18n } from 'vue-i18n';
 import { ActionSheetButton, IonActionSheet } from '@ionic/vue';
 import { useSelectedMediaStore } from '@/stores/selectedMedia.store';

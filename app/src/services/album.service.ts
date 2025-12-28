@@ -31,7 +31,6 @@ export const AlbumService = {
       return {
         id: `${item.id}`,
         name: item.name,
-        isPublic: item.isPublic,
         description: item.description,
         mediaCount: item.mediaCount,
         media,

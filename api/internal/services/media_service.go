@@ -33,26 +33,20 @@ func (s *MediaService) GetMediaList(userEmail string) ([]dto.MediaResponseDto, e
 		return nil, fmt.Errorf("user not found")
 	}
 
-	mediaList, err := s.mediaRepo.Get(user.IsAdmin, user.ID)
+	mediaList, err := s.mediaRepo.Get(user.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	var results []dto.MediaResponseDto
 	for _, media := range mediaList {
-		// var loc dto.Location
-		// if media.Location.Latitude != 0 || media.Location.Longitude != 0 {
-		// 	loc = dto.Location{Lat: media.Location.Latitude, Lng: media.Location.Longitude}
-		// }
 		results = append(results, dto.MediaResponseDto{
 			Id:          media.ID,
-			IsPublic:    media.IsPublic,
 			IsFavourite: media.IsFavourite,
 			Caption:     media.Caption,
 			Date:        media.Date.Format("2006-01-02"),
 			Type:        media.Type,
-			// Location:    loc,
-			CreatedAt: media.CreatedAt,
+			CreatedAt:   media.CreatedAt,
 		})
 	}
 
@@ -71,11 +65,6 @@ func (s *MediaService) GetMediaByID(id uint, userEmail string) (*models.Media, e
 	}
 	if media == nil {
 		return nil, nil // Media not found
-	}
-
-	// Check permissions
-	if !media.IsPublic && (media.UserID == nil || *media.UserID != user.ID) && !user.IsAdmin {
-		return nil, fmt.Errorf("access denied")
 	}
 
 	return media, nil
@@ -135,49 +124,38 @@ func (s *MediaService) CreateFromRequest(meta dto.MediaUploadRequestDto, file io
 		Type:      getMediaType(meta.Type),
 		FileExt:   getFileExt(meta.FileName), // Original-Endung behalten
 		Date:      parsedDate,
-		IsPublic:  meta.IsPublic,
 		CreatedAt: time.Now(),
-	}
-
-	if meta.LocationLat != 0 || meta.LocationLng != 0 {
-		media.Location = models.Location{
-			Latitude:  meta.LocationLat,
-			Longitude: meta.LocationLng,
-		}
-	}
-	if meta.Orientation != "" {
-		media.Orientation = meta.Orientation
 	}
 
 	if err := s.mediaRepo.Create(media); err != nil {
 		return nil, err
 	}
 
-	fileData, err := io.ReadAll(file)
+	bytes, err := io.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := s.storage.Upload(fileData, media.RemotePath()); err != nil {
+	if err := s.storage.Upload(bytes, media.RemotePath()); err != nil {
 		return nil, fmt.Errorf("failed to upload original file: %w", err)
 	}
 
 	if media.Type == "image" || media.Type == "video" {
 		if media.Type == "image" {
-			fileData, err = s.convertToWebP(fileData)
+			bytes, err = s.convertToWebP(bytes)
 			if err != nil {
 				return nil, err
 			}
 		}
 
 		if media.Type == "video" {
-			fileData, err = s.generateVideoPoster(media, fileData)
+			bytes, err = s.generateVideoPoster(media, bytes)
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		if err := s.saveMediaFile(media, fileData); err != nil {
+		if err := s.saveMediaFile(media, bytes); err != nil {
 			return nil, err
 		}
 	}
@@ -214,7 +192,6 @@ func (s *MediaService) UploadMedia(files []*multipart.FileHeader, metaList []dto
 
 		uploaded = append(uploaded, dto.MediaResponseDto{
 			Id:          media.ID,
-			IsPublic:    media.IsPublic,
 			IsFavourite: false,
 			Caption:     media.Caption,
 			Date:        media.Date.Format("2006-01-02"),
@@ -247,17 +224,10 @@ func (s *MediaService) UpdateMediaBatch(updates []dto.MediaUpdateRequestDto, use
 			continue
 		}
 
-		if !existingMedia.IsPublic && (existingMedia.UserID == nil || *existingMedia.UserID != user.ID) && !user.IsAdmin {
-			updateErrors = append(updateErrors, fmt.Sprintf("access denied for media ID %d", update.ID))
-			continue
-		}
-
 		if update.Caption != nil {
 			existingMedia.Caption = *update.Caption
 		}
-		if update.IsPublic != nil {
-			existingMedia.IsPublic = *update.IsPublic
-		}
+
 		if update.Date != nil {
 			parsedDate, err := time.Parse("2006-01-02", *update.Date)
 			if err != nil {
@@ -265,12 +235,6 @@ func (s *MediaService) UpdateMediaBatch(updates []dto.MediaUpdateRequestDto, use
 				continue
 			}
 			existingMedia.Date = parsedDate
-		}
-		if update.Location != nil {
-			existingMedia.Location = models.Location{
-				Latitude:  update.Location.Lat,
-				Longitude: update.Location.Lng,
-			}
 		}
 
 		if err := s.mediaRepo.Update(existingMedia); err != nil {
@@ -280,7 +244,6 @@ func (s *MediaService) UpdateMediaBatch(updates []dto.MediaUpdateRequestDto, use
 
 		updatedMedia = append(updatedMedia, dto.MediaResponseDto{
 			Id:          existingMedia.ID,
-			IsPublic:    existingMedia.IsPublic,
 			IsFavourite: existingMedia.IsFavourite,
 			Caption:     existingMedia.Caption,
 			Date:        existingMedia.Date.Format("2006-01-02"),

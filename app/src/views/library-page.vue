@@ -76,8 +76,6 @@
         @favourite:unset="onUnsetFavourites"
         @album:select="onSelectAlbum"
         @album:unselect="onAlbumUnselect"
-        @public:set="onSetPublic"
-        @public:unset="onUnsetPublic"
         @edit="onEditMedia"
         @delete="onDelete"
       />
@@ -95,8 +93,6 @@
       @favourite:unset="onUnsetFavourites"
       @album:select="onSelectAlbum"
       @album:unselect="onAlbumUnselect"
-      @public:set="onSetPublic"
-      @public:unset="onUnsetPublic"
       @edit="onEditMedia"
       @delete="onDelete"
     />
@@ -166,7 +162,7 @@ const pageTitle = computed(() => {
   } else if (route.name === 'albums') {
     return collectionTitle.value;
   } else {
-    return visibleRange.value || 'Library';
+    return visibleRange.value || t('Library');
   }
 });
 
@@ -176,7 +172,6 @@ const filteredMediaList = computed(() => {
   const filtered = mediaList.value.filter((media) => {
     if (favourites.value && !media.isFavourite) return false;
     if (mediatype.value && media.type !== mediatype.value) return false;
-    if (isAdmin && nonPublicOnly.value && media.isPublic) return false;
     return true;
   });
 
@@ -440,60 +435,6 @@ const onUnsetFavourites = async () => {
   } finally {
     if (openMedia.value && selectedMedia.ids.includes(openMedia.value.id)) {
       openMedia.value.isFavourite = false;
-    } else {
-      selectedMedia.clear();
-      isSelectMode.value = false;
-    }
-  }
-};
-
-const onSetPublic = async () => {
-  // hasOpenContextPopover.value = false;
-  if (selectedMedia.ids.length === 0) return;
-
-  try {
-    const ids = selectedMedia.ids;
-    await MediaService.setPublic(ids, true);
-    app.setNotification(t('Set public', { count: ids.length }));
-
-    ids.forEach((id) => {
-      const media = mediaList.value.find((m) => m.id === id);
-      if (media) {
-        media.isPublic = true;
-      }
-    });
-  } catch (error: unknown) {
-    app.setNotification(t('Failed to set public'), error);
-  } finally {
-    if (openMedia.value && selectedMedia.ids.includes(openMedia.value.id)) {
-      openMedia.value.isPublic = true;
-    } else {
-      selectedMedia.clear();
-      isSelectMode.value = false;
-    }
-  }
-};
-
-const onUnsetPublic = async () => {
-  // hasOpenContextPopover.value = false;
-  if (selectedMedia.ids.length === 0) return;
-
-  try {
-    const ids = selectedMedia.ids;
-    await MediaService.setPublic(ids, false);
-    app.setNotification(t('Set non public', { count: ids.length }));
-
-    ids.forEach((id) => {
-      const media = mediaList.value.find((m) => m.id === id);
-      if (media) {
-        media.isPublic = false;
-      }
-    });
-  } catch (error: unknown) {
-    app.setNotification(t('Failed to set non public'), error);
-  } finally {
-    if (openMedia.value && selectedMedia.ids.includes(openMedia.value.id)) {
-      openMedia.value.isPublic = false;
     } else {
       selectedMedia.clear();
       isSelectMode.value = false;

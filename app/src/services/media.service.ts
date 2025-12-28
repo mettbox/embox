@@ -21,11 +21,7 @@ export const MediaService = {
       caption: file.caption,
       type: file.type, // e.g "image/jpeg"
       fileName: file.fileName, // original file name
-      isPublic: file.isPublic,
       date: file.date, // yyyy-mm-dd
-      orientation: file.orientation ?? '',
-      locationLat: file.location?.lat ?? 0,
-      locationLng: file.location?.lng ?? 0,
     }));
     formData.append('meta', JSON.stringify(meta));
 
@@ -36,14 +32,6 @@ export const MediaService = {
     });
 
     return await httpService('media/', 'post', formData, {}, 600000); // 10 minutes timeout
-  },
-
-  async setPublic(ids: number[], isPublic: boolean): Promise<void> {
-    const updates = ids.map((id) => ({
-      id,
-      isPublic,
-    }));
-    return this.update(updates);
   },
 
   async update(updates: Partial<Media>[]): Promise<void> {

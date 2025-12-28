@@ -93,7 +93,6 @@ const onEdit = (item: CollectionListItem): void => {
     id: Number(item.id),
     name: item.name,
     description: item.description || '',
-    isPublic: item.isPublic || false,
   };
   hasOpenModal.value = true;
 };
@@ -103,7 +102,6 @@ const onRemove = (item: CollectionListItem): void => {
     id: Number(item.id),
     name: item.name,
     description: item.description || '',
-    isPublic: item.isPublic || false,
   };
   hasOpenDelete.value = true;
 };

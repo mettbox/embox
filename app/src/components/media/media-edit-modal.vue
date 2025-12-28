@@ -26,13 +26,8 @@
           v-for="(media, index) in items"
           :key="media.id"
         >
-          <ion-thumbnail
-            slot="start"
-            @click="items[index] && (items[index].isPublic = !items[index].isPublic)"
-            :class="{ 'is-public': items[index].isPublic }"
-          >
+          <ion-thumbnail slot="start">
             <ion-img :src="media.thumbUrl" />
-            <ion-icon :icon="items[index].isPublic ? eyeOutline : eyeOffOutline" />
           </ion-thumbnail>
 
           <ion-label>
@@ -84,7 +79,7 @@ import {
   IonImg,
 } from '@ionic/vue';
 import { ref } from 'vue';
-import { close, saveOutline, eyeOffOutline, eyeOutline } from 'ionicons/icons';
+import { close, saveOutline } from 'ionicons/icons';
 import { useSelectedMediaStore } from '@/stores/selectedMedia.store';
 
 const props = defineProps<{
@@ -111,7 +106,6 @@ const onSave = () => {
   const updates = items.value.map((item) => ({
     id: item.id,
     caption: item.caption,
-    isPublic: item.isPublic,
   }));
   emit('did-edit', updates);
 };

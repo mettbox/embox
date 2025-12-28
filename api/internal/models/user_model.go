@@ -8,17 +8,16 @@ import (
 )
 
 type User struct {
-	ID                  uuid.UUID `gorm:"type:char(36);primaryKey"`
-	Name                string    `gorm:"type:varchar(48);null"`
-	Email               string    `gorm:"type:varchar(128);not null;unique"`
-	IsAdmin             bool      `gorm:"default:false"`
-	HasPublicFavourites *bool     `gorm:"default:true"`
-	Token               string    `gorm:"type:varchar(80);null"`
-	TokenCreatedAt      time.Time `gorm:"default:null"`
-	CreatedAt           time.Time
-	UpdatedAt           time.Time
-	LastLoginAt         *time.Time  `gorm:"default:null"`
-	Favourites          []Favourite `gorm:"foreignKey:UserID"`
+	ID             uuid.UUID `gorm:"type:char(36);primaryKey"`
+	Name           string    `gorm:"type:varchar(48);null"`
+	Email          string    `gorm:"type:varchar(128);not null;unique"`
+	IsAdmin        bool      `gorm:"default:false"`
+	Token          string    `gorm:"type:varchar(80);null"`
+	TokenCreatedAt time.Time `gorm:"default:null"`
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	LastLoginAt    *time.Time  `gorm:"default:null"`
+	Favourites     []Favourite `gorm:"foreignKey:UserID"`
 }
 
 func (User) TableName() string {

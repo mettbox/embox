@@ -44,15 +44,7 @@
               class="error-indicator"
             />
           </div>
-          <ion-thumbnail
-            slot="start"
-            @click="
-              uploadStore.files[index] && (uploadStore.files[index].isPublic = !uploadStore.files[index].isPublic)
-            "
-            :class="{
-              'is-public': uploadStore.files[index].isPublic,
-            }"
-          >
+          <ion-thumbnail slot="start">
             <ion-img
               v-if="file.type.startsWith('image/')"
               :src="file.file"
@@ -79,11 +71,6 @@
               v-else
               :icon="helpCircle"
               size="large"
-            />
-            <ion-icon
-              v-if="!uploadStore.files[index].isPublic"
-              class="non-public-icon"
-              :icon="eyeOffOutline"
             />
           </ion-thumbnail>
 
@@ -149,12 +136,6 @@
             />
           </ion-button>
           <template v-if="uploadStore.files.length >= 0">
-            <ion-button @click="toggleAllPublic">
-              <ion-icon
-                slot="icon-only"
-                :icon="hasAllPublic ? eyeOutline : eyeOffOutline"
-              />
-            </ion-button>
             <ion-button @click="hasOpenAlbumModal = true">
               <ion-icon
                 slot="icon-only"
@@ -215,8 +196,6 @@ import {
   closeCircleOutline,
   saveOutline,
   addCircleOutline,
-  eyeOffOutline,
-  eyeOutline,
   albumsOutline,
 } from 'ionicons/icons';
 import mediaDatepicker from '@/components/media/media-datepicker.vue';
@@ -243,7 +222,6 @@ const isInvalid = computed(() => {
 const modalRef = ref<InstanceType<typeof IonModal> | null>(null);
 const inputRef = ref<HTMLInputElement | null>(null);
 const isUploading = ref(false);
-const hasAllPublic = ref(false);
 const hasOpenAlbumModal = ref(false);
 
 const onFileChange = async (e: Event) => {
@@ -256,27 +234,17 @@ const onFileChange = async (e: Event) => {
     const alreadyExists = uploadStore.files.some((m) => m.size === file.size && m.fileName === file.name);
     if (alreadyExists) continue;
 
-    let location;
     let date;
-    let orientation;
 
     if (file.type.startsWith('image/')) {
       try {
         const exif = await exifr.parse(file, {
-          gps: true,
-          tiff: true,
           exif: true,
         });
         if (exif) {
-          if (exif.latitude && exif.longitude) {
-            location = { lat: exif.latitude, lng: exif.longitude };
-          }
           if (exif.DateTimeOriginal) {
             const d = new Date(exif.DateTimeOriginal);
             date = d.toISOString().slice(0, 10); // yyyy-mm-dd
-          }
-          if (exif.Orientation) {
-            orientation = exif.Orientation;
           }
         }
       } catch (err) {
@@ -291,9 +259,6 @@ const onFileChange = async (e: Event) => {
       file: window.URL.createObjectURL(file),
       fileName: file.name,
       date,
-      isPublic: true,
-      location,
-      orientation,
       rawFile: file, // Store the original File object for upload
       status: 'pending',
     });
@@ -325,13 +290,6 @@ const onCancel = async () => {
 
 const onRemove = (index: number) => {
   uploadStore.files.splice(index, 1);
-};
-
-const toggleAllPublic = () => {
-  hasAllPublic.value = !hasAllPublic.value;
-  uploadStore.files.forEach((f) => {
-    f.isPublic = hasAllPublic.value;
-  });
 };
 
 // set same date for all files w/o date

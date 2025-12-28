@@ -27,21 +27,17 @@ func (r *mediaRepository) Delete(ids []uint) error {
 	return r.db.Where("id IN ?", ids).Delete(&models.Media{}).Error
 }
 
-func (r *mediaRepository) Get(isAdmin bool, userId uuid.UUID) ([]*models.Media, error) {
-	var media []*models.Media
+func (r *mediaRepository) Get(userId uuid.UUID) ([]*MediaListItem, error) {
+	var media []*MediaListItem
 
 	query := r.db.
-		Table("media AS m").
+		Model(&models.Media{}).
 		Select(`
-            m.*,
+            media.*,
             CASE WHEN fav.user_id IS NOT NULL THEN true ELSE false END AS is_favourite
         `).
-		Joins("LEFT JOIN favourites AS fav ON fav.media_id = m.id AND fav.user_id = ?", userId).
-		Order("m.date DESC")
-
-	if !isAdmin {
-		query = query.Where("m.is_public = ?", true)
-	}
+		Joins("LEFT JOIN favourites AS fav ON fav.media_id = media.id AND fav.user_id = ?", userId).
+		Order("media.date DESC")
 
 	err := query.Find(&media).Error
 

@@ -21,21 +21,13 @@ declare global {
     lastLoginAt?: string;
   };
 
-  type Location = {
-    lat: number;
-    lng: number;
-  };
-
   type UploadMedia = {
     caption: string;
     type: string;
     size: number;
     file: string;
     fileName: string;
-    location?: Location;
     date?: string;
-    isPublic: boolean;
-    orientation?: number;
     rawFile?: globalThis.File;
     status: 'pending' | 'uploading' | 'uploaded' | 'failed';
   };
@@ -47,11 +39,9 @@ declare global {
 
   type Media = {
     id: number;
-    isPublic: boolean;
     caption: string;
     date: string; // YYYY-MM-DD
     type: string;
-    // location: Location;
     createdAt: string; // datetime
     thumbUrl?: string;
     isFavourite?: boolean;
@@ -82,7 +72,6 @@ declare global {
 
   type Album = {
     id: number;
-    isPublic: boolean;
     name: string;
     description: string;
     mediaCount: number;
@@ -93,7 +82,6 @@ declare global {
     id?: number;
     name: string;
     description: string;
-    isPublic: boolean;
   };
 
   type CollectionListItem = {
@@ -101,7 +89,6 @@ declare global {
     name: string;
     description?: string;
     mediaCount: number;
-    isPublic?: boolean;
     media: {
       id: number;
       caption: string;

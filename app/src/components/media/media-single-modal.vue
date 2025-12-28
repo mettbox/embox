@@ -16,15 +16,6 @@
               :icon="media.isFavourite === false ? heartOutline : heart"
             />
           </ion-button>
-          <ion-button
-            v-if="isAdmin"
-            @click="media.isPublic === false ? $emit('public:set') : $emit('public:unset')"
-          >
-            <ion-icon
-              slot="icon-only"
-              :icon="media.isPublic === false ? eyeOffOutline : eyeOutline"
-            />
-          </ion-button>
         </ion-buttons>
         <ion-title class="ion-text-center">
           {{ localizedDate }}
@@ -153,7 +144,7 @@ import {
 } from '@ionic/vue';
 import { onMounted, onUnmounted, ref, nextTick, computed, watch } from 'vue';
 import { createGesture } from '@ionic/vue';
-import { heart, close, ellipsisHorizontalCircleOutline, heartOutline, eyeOutline, eyeOffOutline } from 'ionicons/icons';
+import { heart, close, ellipsisHorizontalCircleOutline, heartOutline } from 'ionicons/icons';
 import mediaSelectPopover from './media-select-popover.vue';
 import { MediaService } from '@/services/media.service';
 import mediaZoom from './media-zoom.vue';

@@ -24,14 +24,6 @@
         @ion-blur="() => validateField('description')"
       />
     </ion-item>
-    <ion-item>
-      <ion-toggle
-        justify="space-between"
-        v-model="form.isPublic"
-      >
-        {{ $t('Is public') }}
-      </ion-toggle>
-    </ion-item>
     <ion-item class="ion-margin-top">
       <ion-button
         size="default"
@@ -46,7 +38,7 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { IonInput, IonList, IonToggle, IonItem, IonButton, IonTextarea } from '@ionic/vue';
+import { IonInput, IonList, IonItem, IonButton, IonTextarea } from '@ionic/vue';
 import { useValidation, type FormField } from '@/composables/use-validation';
 
 const props = defineProps<{
@@ -61,7 +53,6 @@ const form = reactive<AlbumForm>({
   id: props.album?.id,
   name: props.album?.name || '',
   description: props.album?.description || '',
-  isPublic: props.album?.isPublic || true,
 });
 
 const { t } = useI18n();
@@ -96,7 +87,6 @@ const update = async () => {
     id: form.id,
     name: form.name.trim(),
     description: form.description.trim(),
-    isPublic: form.isPublic,
   });
 };
 </script>

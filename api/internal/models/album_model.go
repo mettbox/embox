@@ -8,7 +8,6 @@ import (
 
 type Album struct {
 	ID          uint       `gorm:"type:int;primaryKey"`
-	IsPublic    bool       `gorm:"not null;default:false" json:"isPublic"`
 	Name        string     `gorm:"type:varchar(255);not null"`
 	Description string     `gorm:"type:text;null"`
 	UserID      *uuid.UUID `gorm:"type:char(36);null"`                             // Foreign Key, nullable
@@ -21,7 +20,7 @@ type Album struct {
 	AlbumMedia []AlbumMedia `gorm:"foreignKey:AlbumID"`
 
 	// Computed field for media count
-	MediaCount int `json:"mediaCount"`
+	MediaCount int `gorm:"-" json:"mediaCount"`
 }
 
 type AlbumMedia struct {

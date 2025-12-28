@@ -13,11 +13,6 @@
       </ion-thumbnail>
       <ion-label>
         {{ item.name }}
-        <ion-icon
-          v-if="item?.isPublic === false"
-          :icon="eyeOffOutline"
-          style="font-size: 0.8em"
-        />
         <ion-note v-if="item.description">{{ item.description }}</ion-note>
       </ion-label>
       <ion-note slot="end">{{ item.mediaCount }}</ion-note>
@@ -58,7 +53,7 @@ import {
   IonItemOption,
   IonIcon,
 } from '@ionic/vue';
-import { trashOutline, createOutline, eyeOffOutline } from 'ionicons/icons';
+import { trashOutline, createOutline } from 'ionicons/icons';
 import { useThumbnail } from '@/composables/use-thumbnail';
 
 const props = withDefaults(

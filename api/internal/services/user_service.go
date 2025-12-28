@@ -58,12 +58,11 @@ func (s *UserService) GetAllUsers() ([]dto.UserResponse, error) {
 	var results []dto.UserResponse
 	for _, user := range users {
 		results = append(results, dto.UserResponse{
-			ID:                  user.ID.String(),
-			Name:                user.Name,
-			Email:               user.Email,
-			IsAdmin:             user.IsAdmin,
-			HasPublicFavourites: user.HasPublicFavourites,
-			LastLoginAt:         user.LastLoginAt,
+			ID:          user.ID.String(),
+			Name:        user.Name,
+			Email:       user.Email,
+			IsAdmin:     user.IsAdmin,
+			LastLoginAt: user.LastLoginAt,
 		})
 	}
 
@@ -81,12 +80,11 @@ func (s *UserService) GetByToken(token string, validDuration time.Duration) (*dt
 	}
 
 	result := &dto.UserResponse{
-		ID:                  user.ID.String(),
-		Name:                user.Name,
-		Email:               user.Email,
-		IsAdmin:             user.IsAdmin,
-		HasPublicFavourites: user.HasPublicFavourites,
-		LastLoginAt:         user.LastLoginAt,
+		ID:          user.ID.String(),
+		Name:        user.Name,
+		Email:       user.Email,
+		IsAdmin:     user.IsAdmin,
+		LastLoginAt: user.LastLoginAt,
 	}
 
 	return result, nil
@@ -124,12 +122,11 @@ func (s *UserService) GetUserByEmail(email string) (*dto.UserResponse, error) {
 	}
 
 	result := &dto.UserResponse{
-		ID:                  user.ID.String(),
-		Name:                user.Name,
-		Email:               user.Email,
-		IsAdmin:             user.IsAdmin,
-		HasPublicFavourites: user.HasPublicFavourites,
-		LastLoginAt:         user.LastLoginAt,
+		ID:          user.ID.String(),
+		Name:        user.Name,
+		Email:       user.Email,
+		IsAdmin:     user.IsAdmin,
+		LastLoginAt: user.LastLoginAt,
 	}
 
 	return result, nil
@@ -154,9 +151,6 @@ func (s *UserService) UpdateUser(id uuid.UUID, req dto.UpdateUserRequest) (*dto.
 	if req.IsAdmin != nil {
 		existingUser.IsAdmin = *req.IsAdmin
 	}
-	if req.HasPublicFavourites != nil {
-		existingUser.HasPublicFavourites = req.HasPublicFavourites
-	}
 	if req.LastLoginAt != nil {
 		existingUser.LastLoginAt = req.LastLoginAt
 	}
@@ -166,12 +160,11 @@ func (s *UserService) UpdateUser(id uuid.UUID, req dto.UpdateUserRequest) (*dto.
 	}
 
 	result := &dto.UserResponse{
-		ID:                  existingUser.ID.String(),
-		Name:                existingUser.Name,
-		Email:               existingUser.Email,
-		IsAdmin:             existingUser.IsAdmin,
-		HasPublicFavourites: existingUser.HasPublicFavourites,
-		LastLoginAt:         existingUser.LastLoginAt,
+		ID:          existingUser.ID.String(),
+		Name:        existingUser.Name,
+		Email:       existingUser.Email,
+		IsAdmin:     existingUser.IsAdmin,
+		LastLoginAt: existingUser.LastLoginAt,
 	}
 
 	return result, nil

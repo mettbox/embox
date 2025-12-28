@@ -36,7 +36,7 @@ func (r *favouriteRepository) Remove(userId uuid.UUID, mediaIds []uint) error {
 	return r.db.Where("user_id = ? AND media_id IN ?", userId, mediaIds).Delete(&models.Favourite{}).Error
 }
 
-func (r *favouriteRepository) GetUsersWithLatestFavourite(isAdmin bool) ([]UserWithLatestFavourite, error) {
+func (r *favouriteRepository) GetUsersWithLatestFavourite() ([]UserWithLatestFavourite, error) {
 	var results []UserWithLatestFavourite
 
 	// Subquery: Get latest favourite per user firstly
@@ -62,12 +62,7 @@ func (r *favouriteRepository) GetUsersWithLatestFavourite(isAdmin bool) ([]UserW
     `).
 		Joins("JOIN users ON users.id = favourites.user_id").
 		Joins("JOIN media ON media.id = favourites.media_id").
-		Joins("JOIN (?) as latest_favourites ON favourites.user_id = latest_favourites.user_id AND favourites.created_at = latest_favourites.latest_created_at", subQuery).
-		Where("users.has_public_favourites = ?", true)
-
-	if !isAdmin {
-		query = query.Where("media.is_public = ?", true)
-	}
+		Joins("JOIN (?) as latest_favourites ON favourites.user_id = latest_favourites.user_id AND favourites.created_at = latest_favourites.latest_created_at", subQuery)
 
 	query = query.
 		Group("users.id, users.name, media.id, media.caption, media.type").
@@ -81,8 +76,8 @@ func (r *favouriteRepository) GetUsersWithLatestFavourite(isAdmin bool) ([]UserW
 	return results, nil
 }
 
-func (r *favouriteRepository) GetFavouritesByUserID(isAdmin bool, userId uuid.UUID, favUserID string) ([]*models.Media, error) {
-	var media []*models.Media
+func (r *favouriteRepository) GetFavouritesByUserID(userId uuid.UUID, favUserID string) ([]*MediaListItem, error) {
+	var media []*MediaListItem
 
 	query := r.db.
 		Table("favourites AS f").
@@ -97,10 +92,6 @@ func (r *favouriteRepository) GetFavouritesByUserID(isAdmin bool, userId uuid.UU
 		Joins("LEFT JOIN favourites AS fav ON fav.media_id = m.id AND fav.user_id = ?", userId).
 		Where("f.user_id = ?", favUserID).
 		Order("m.date DESC")
-
-	if !isAdmin {
-		query = query.Where("m.is_public = ?", true)
-	}
 
 	err := query.Scan(&media).Error
 	if err != nil {

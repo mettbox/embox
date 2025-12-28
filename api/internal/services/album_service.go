@@ -23,7 +23,6 @@ func (s *AlbumService) CreateAlbum(album *dto.CreateAlbumRequestDto, userEmail s
 	}
 
 	newAlbum := &dto.AlbumResponseDto{
-		IsPublic:    album.IsPublic,
 		Name:        album.Name,
 		Description: album.Description,
 		MediaCount:  len(album.MediaIDs),
@@ -32,7 +31,6 @@ func (s *AlbumService) CreateAlbum(album *dto.CreateAlbumRequestDto, userEmail s
 	albumModel := &models.Album{
 		Name:        album.Name,
 		Description: album.Description,
-		IsPublic:    album.IsPublic,
 		UserID:      &user.ID,
 	}
 
@@ -65,9 +63,6 @@ func (s *AlbumService) UpdateAlbum(id uint, album *dto.UpdateAlbumRequestDto) (*
 	if album.Description != "" {
 		existingAlbum.Description = album.Description
 	}
-	if album.IsPublic != nil {
-		existingAlbum.IsPublic = *album.IsPublic
-	}
 
 	if err := s.albumRepo.Update(existingAlbum); err != nil {
 		return nil, fmt.Errorf("failed to update album: %w", err)
@@ -75,10 +70,9 @@ func (s *AlbumService) UpdateAlbum(id uint, album *dto.UpdateAlbumRequestDto) (*
 	// return updated existingAlbum album as AlbumResponseDto
 	result := &dto.AlbumResponseDto{
 		Id:          existingAlbum.ID,
-		IsPublic:    existingAlbum.IsPublic,
 		Name:        existingAlbum.Name,
 		Description: existingAlbum.Description,
-		MediaCount:  existingAlbum.MediaCount,
+		MediaCount:  len(existingAlbum.AlbumMedia),
 		Media:       []dto.AlbumMediaResponseDto{},
 	}
 
@@ -92,7 +86,7 @@ func (s *AlbumService) GetAlbumList(userEmail string) ([]dto.AlbumResponseDto, e
 		return nil, fmt.Errorf("user not found")
 	}
 
-	albums, err := s.albumRepo.Get(user.IsAdmin)
+	albums, err := s.albumRepo.Get()
 	if err != nil {
 		fmt.Printf("Error fetching albums: %v\n", err)
 		return nil, err
@@ -104,7 +98,6 @@ func (s *AlbumService) GetAlbumList(userEmail string) ([]dto.AlbumResponseDto, e
 		for _, albumMedia := range album.AlbumMedia {
 			mediaDto := dto.AlbumMediaResponseDto{
 				Id:          albumMedia.MediaID,
-				IsPublic:    albumMedia.Media.IsPublic,
 				IsFavourite: albumMedia.Media.IsFavourite,
 				Caption:     albumMedia.Media.Caption,
 				Date:        albumMedia.Media.Date.Format("2006-01-02"),
@@ -117,7 +110,6 @@ func (s *AlbumService) GetAlbumList(userEmail string) ([]dto.AlbumResponseDto, e
 
 		albumDto := dto.AlbumResponseDto{
 			Id:          album.ID,
-			IsPublic:    album.IsPublic,
 			Name:        album.Name,
 			Description: album.Description,
 			MediaCount:  album.MediaCount,
@@ -140,7 +132,6 @@ func (s *AlbumService) GetAlbumByID(id uint) (*dto.AlbumResponseDto, error) {
 	for _, albumMedia := range album.AlbumMedia {
 		mediaDto := dto.AlbumMediaResponseDto{
 			Id:          albumMedia.MediaID,
-			IsPublic:    albumMedia.Media.IsPublic,
 			IsFavourite: albumMedia.Media.IsFavourite,
 			Caption:     albumMedia.Media.Caption,
 			Date:        albumMedia.Media.Date.Format("2006-01-02"),
@@ -153,7 +144,6 @@ func (s *AlbumService) GetAlbumByID(id uint) (*dto.AlbumResponseDto, error) {
 
 	albumDto := &dto.AlbumResponseDto{
 		Id:          album.ID,
-		IsPublic:    album.IsPublic,
 		Name:        album.Name,
 		Description: album.Description,
 		MediaCount:  len(mediaDtos),

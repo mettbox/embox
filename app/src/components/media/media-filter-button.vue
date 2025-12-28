@@ -1,16 +1,5 @@
 <template>
   <ion-button
-    v-if="nonPublicOnly"
-    shape="round"
-    color="primary"
-    @click="emit('update:non-public-only', false)"
-  >
-    <ion-icon
-      slot="icon-only"
-      :icon="eyeOff"
-    />
-  </ion-button>
-  <ion-button
     id="filter-popover"
     shape="round"
     :color="isActive ? 'primary' : 'dark'"
@@ -49,24 +38,6 @@
         </ion-radio-group>
       </ion-list>
 
-      <ion-list
-        v-if="isAdmin"
-        lines="full"
-      >
-        <ion-item
-          :button="true"
-          :detail="false"
-          @click="emit('update:non-public-only', !nonPublicOnly)"
-        >
-          <ion-icon
-            slot="end"
-            size="small"
-            :color="nonPublicOnly ? 'primary' : 'medium'"
-            :icon="nonPublicOnly ? eyeOff : eyeOffOutline"
-          />
-          <ion-label>{{ $t('Non public only') }}</ion-label>
-        </ion-item>
-      </ion-list>
       <ion-list lines="none">
         <ion-item
           :button="true"
@@ -162,11 +133,8 @@ import {
   musicalNotesOutline,
   musicalNotes,
   apps,
-  eyeOffOutline,
-  eyeOff,
 } from 'ionicons/icons';
 import { computed } from 'vue';
-import { useMeStore } from '@/stores/me.store';
 
 const props = defineProps<{
   sort: 'asc' | 'desc';
@@ -191,9 +159,6 @@ const buttonIcon = computed(() => {
   if (props.filter === 'audio') return musicalNotes;
   return swapVertical;
 });
-
-const me = useMeStore();
-const isAdmin = me.isAdmin;
 </script>
 
 <style scoped>

@@ -40,7 +40,7 @@ func (s *FavouriteService) GetUsersWithLatestFavourite(userEmail string) ([]dto.
 		return nil, fmt.Errorf("user not found")
 	}
 
-	results, err := s.favRepo.GetUsersWithLatestFavourite(user.IsAdmin)
+	results, err := s.favRepo.GetUsersWithLatestFavourite()
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch users with latest favourites: %w", err)
 	}
@@ -79,7 +79,7 @@ func (s *FavouriteService) GetFavouritesByUserID(favUserID, userEmail string) (d
 		return dto.FavouritesResponseDto{}, fmt.Errorf("user not found")
 	}
 
-	results, err := s.favRepo.GetFavouritesByUserID(user.IsAdmin, user.ID, favUserID)
+	results, err := s.favRepo.GetFavouritesByUserID(user.ID, favUserID)
 	if err != nil {
 		return dto.FavouritesResponseDto{}, fmt.Errorf("failed to fetch favourites for user %s: %w", favUserID, err)
 	}
@@ -103,7 +103,6 @@ func (s *FavouriteService) GetFavouritesByUserID(favUserID, userEmail string) (d
 	for i, fav := range results {
 		mediaDtos[i] = dto.MediaResponseDto{
 			Id:          fav.ID,
-			IsPublic:    fav.IsPublic,
 			IsFavourite: fav.IsFavourite,
 			Caption:     fav.Caption,
 			Date:        fav.Date.Format("2006-01-02"),
