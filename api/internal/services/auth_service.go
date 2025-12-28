@@ -2,11 +2,11 @@ package services
 
 import (
 	"embox/internal/config"
-	"embox/pkg/jwt"
 	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	_ "github.com/joho/godotenv/autoload"
 )
 
@@ -15,9 +15,16 @@ type AuthService struct {
 	emailService *EmailService
 }
 
+type Claims struct {
+	jwt.StandardClaims
+	User string `json:"user"`
+}
+
 func NewAuthService(config *config.AuthConfig, emailService *EmailService) *AuthService {
 	return &AuthService{config: config, emailService: emailService}
 }
+
+// === public functions ===
 
 func (s *AuthService) GetAccessCookie(c *gin.Context) (string, error) {
 	cookie, err := c.Cookie("access_token")
@@ -36,12 +43,12 @@ func (s *AuthService) GetRefreshCookie(c *gin.Context) (string, error) {
 }
 
 func (s *AuthService) SetCookie(c *gin.Context, payload string) error {
-	loginToken, err := jwt.GenerateUserToken(payload, s.config.AccessSecret, s.config.AccessExpiration)
+	loginToken, err := s.generateUserToken(payload, s.config.AccessSecret, s.config.AccessExpiration)
 	if err != nil {
 		return err
 	}
 
-	refreshToken, err := jwt.GenerateUserToken(payload, s.config.RefreshSecret, s.config.RefreshExpiration)
+	refreshToken, err := s.generateUserToken(payload, s.config.RefreshSecret, s.config.RefreshExpiration)
 	if err != nil {
 		return err
 	}
@@ -52,18 +59,18 @@ func (s *AuthService) SetCookie(c *gin.Context, payload string) error {
 	return nil
 }
 
-func (s *AuthService) ValidateAccessCookie(cookie string) (jwt.Claims, error) {
-	claims, err := jwt.ValidateToken(cookie, s.config.AccessSecret)
+func (s *AuthService) ValidateAccessCookie(cookie string) (Claims, error) {
+	claims, err := s.validateToken(cookie, s.config.AccessSecret)
 	if err != nil {
-		return jwt.Claims{}, err
+		return Claims{}, err
 	}
 	return claims, nil
 }
 
-func (s *AuthService) ValidateRefreshCookie(cookie string) (jwt.Claims, error) {
-	claims, err := jwt.ValidateToken(cookie, s.config.RefreshSecret)
+func (s *AuthService) ValidateRefreshCookie(cookie string) (Claims, error) {
+	claims, err := s.validateToken(cookie, s.config.RefreshSecret)
 	if err != nil {
-		return jwt.Claims{}, err
+		return Claims{}, err
 	}
 	return claims, nil
 }
@@ -87,4 +94,46 @@ func (s *AuthService) SendLoginTokenEmail(c *gin.Context, email, name, token str
 
 func (s *AuthService) GetLoginTokenExpiration() time.Duration {
 	return time.Duration(s.config.LoginTokenExpiration) * time.Second
+}
+
+// === private functions ===
+
+func (s *AuthService) generateUserToken(user, secret string, expiration int) (string, error) {
+	claims := &Claims{
+		User: user,
+		StandardClaims: jwt.StandardClaims{
+			IssuedAt:  time.Now().Unix(),
+			ExpiresAt: time.Now().Unix() + int64(expiration), // Add expiration in seconds
+		},
+	}
+
+	// Declare the token with the algorithm used for signing, and the claims
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	tokenString, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return tokenString, err
+	}
+
+	return tokenString, nil
+}
+
+func (s *AuthService) validateToken(tokenString, secret string) (Claims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (any, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(secret), nil
+	})
+
+	if err != nil {
+		return Claims{}, err
+	}
+
+	claims, ok := token.Claims.(*Claims)
+	if !ok || !token.Valid {
+		return Claims{}, fmt.Errorf("invalid token")
+	}
+
+	return *claims, nil
 }

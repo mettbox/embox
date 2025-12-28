@@ -336,27 +336,6 @@ defineExpose({
     align-items: center;
     overflow: hidden;
     background-color: var(--ion-color-light);
-
-    ion-img,
-    video,
-    audio {
-      opacity: 0.6;
-    }
-
-    &.is-public {
-      ion-img,
-      video,
-      audio {
-        opacity: 1;
-      }
-    }
-
-    .non-public-icon {
-      position: absolute;
-      bottom: 4px;
-      right: 4px;
-      font-size: 24px;
-    }
   }
 
   .error-indicator {

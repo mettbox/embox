@@ -4,8 +4,10 @@ go 1.25.1
 
 require (
 	github.com/chai2010/webp v1.4.0
+	github.com/disintegration/imaging v1.6.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/joho/godotenv v1.5.1
+	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gorm.io/gorm v1.25.12
 )
@@ -13,6 +15,7 @@ require (
 require (
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
+	golang.org/x/image v0.0.0-20211028202545-6944b10bf410 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 )
 
