@@ -7,7 +7,7 @@
 
 html,
 body {
-  touch-action: manipulation; /* oder pan-x pan-y */
+  touch-action: manipulation;
 }
 
 .ios {

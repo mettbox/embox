@@ -66,8 +66,6 @@ http://ionicframework.com/docs/theming/ */
   --ion-color-dark-tint: #444444;
 
   /* Other */
-  /* TODO: transparent only for mobile devices*/
-  --ion-backdrop-color: transparent;
   --ion-padding: 16px;
   --ion-padding-half: calc(var(--ion-padding, 16px) / 2);
   --ion-padding-double: calc(var(--ion-padding, 16px) * 2);

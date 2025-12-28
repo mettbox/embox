@@ -157,7 +157,6 @@ import { createGesture } from '@ionic/vue';
 import { heart, close, ellipsisHorizontalCircleOutline, heartOutline } from 'ionicons/icons';
 import mediaSelectPopover from './media-select-popover.vue';
 import mediaZoom from './media-zoom.vue';
-import { useThemeColor } from '@/composables/use-theme-color';
 import { useMeStore } from '@/stores/me.store';
 import { useThumbnail } from '@/composables/use-thumbnail';
 
@@ -189,9 +188,8 @@ const localizedDate = computed(() => {
   return date.toLocaleDateString('de-DE', { year: 'numeric', month: 'long', day: 'numeric' });
 });
 
-const { setThemeColor } = useThemeColor();
 const me = useMeStore();
-const { getFileUrl, getThumbnailUrl } = useThumbnail();
+const { getFileUrl } = useThumbnail();
 
 const modalRef = ref<InstanceType<typeof IonModal> | null>(null);
 const mediaWrapperRef = ref<HTMLElement | null>(null);
@@ -238,10 +236,6 @@ watch(
   },
   { immediate: true },
 );
-
-const load = async () => {
-  // Direct URL is set in watch, no further action needed
-};
 
 const onClose = () => {
   fileUrl.value = undefined;
@@ -318,8 +312,6 @@ const onDelete = () => {
 
 const setZoomMode = (zoom: boolean) => {
   isZoomMode.value = zoom;
-  const theme = zoom ? '--ion-color-dark' : '--ion-color-primary';
-  setThemeColor(theme);
 };
 
 onMounted(async () => {

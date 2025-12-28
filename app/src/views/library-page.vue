@@ -138,7 +138,6 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAppStore } from '@/stores/app.store';
 import { useMeStore } from '@/stores/me.store';
-import { useThumbnail } from '@/composables/use-thumbnail';
 import { useRoute, useRouter } from 'vue-router';
 import { MediaService } from '@/services/media.service';
 import { FavouriteService } from '@/services/favourite.service';
@@ -203,7 +202,6 @@ const route = useRoute();
 const router = useRouter();
 const app = useAppStore();
 const me = useMeStore();
-const { getThumbnailUrl } = useThumbnail();
 const selectedMedia = useSelectedMediaStore();
 
 const mediaList = ref<Media[]>([]);
@@ -526,7 +524,6 @@ const onDelete = async () => {
 
   try {
     const ids = selectedMedia.ids;
-    const mediaToDelete = mediaList.value.filter((media) => ids.includes(media.id));
     mediaList.value = mediaList.value.filter((media) => !ids.includes(media.id));
 
     // Important: small delay to allow UI to update before deletion
