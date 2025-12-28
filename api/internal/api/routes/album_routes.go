@@ -9,6 +9,7 @@ import (
 func RegisterAlbumRoutes(group *gin.RouterGroup, albumHandler *handlers.AlbumHandler) {
 	group.POST("/", albumHandler.CreateAlbum)
 	group.PUT("/:id", albumHandler.UpdateAlbum)
+	group.PUT("/:id/cover", albumHandler.SetCover)
 	group.GET("/", albumHandler.GetAlbumList)
 	group.GET("/:id", albumHandler.GetAlbumByID)
 	group.DELETE("/:id", albumHandler.DeleteAlbum)

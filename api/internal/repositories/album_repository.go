@@ -29,8 +29,7 @@ func (r *albumRepository) Get() ([]*AlbumListItem, error) {
 		Preload("Media").
 		Preload("AlbumMedia.Media").
 		Preload("AlbumMedia", func(db *gorm.DB) *gorm.DB {
-			return db.Where("is_cover = ?", true).
-				Or("album_media.media_id = (SELECT media_id FROM album_media am WHERE am.album_id = album_media.album_id ORDER BY media_id ASC LIMIT 1)")
+			return db.Where("album_media.media_id = (SELECT media_id FROM album_media am WHERE am.album_id = album_media.album_id ORDER BY is_cover DESC, media_id ASC LIMIT 1)")
 		}).
 		Select(`
         albums.*,
@@ -107,4 +106,14 @@ func (r *albumRepository) AddMediaToAlbum(albumId uint, mediaIds []uint, isCover
 
 func (r *albumRepository) RemoveMediaFromAlbum(albumId uint, mediaIds []uint) error {
 	return r.db.Where("album_id = ? AND media_id IN ?", albumId, mediaIds).Delete(&models.AlbumMedia{}).Error
+}
+
+func (r *albumRepository) SetCover(albumId uint, mediaId uint) error {
+	// Remove all covers from album first
+	if err := r.db.Model(&models.AlbumMedia{}).Where("album_id = ? AND is_cover = ?", albumId, true).Update("is_cover", false).Error; err != nil {
+		return err
+	}
+
+	// Set new cover
+	return r.db.Model(&models.AlbumMedia{}).Where("album_id = ? AND media_id = ?", albumId, mediaId).Update("is_cover", true).Error
 }

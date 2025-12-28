@@ -164,3 +164,28 @@ func (h *AlbumHandler) RemoveMediaFromAlbum(c *gin.Context) {
 
 	response.JSONSuccess(c, gin.H{"message": "Media removed from album successfully"})
 }
+
+func (h *AlbumHandler) SetCover(c *gin.Context) {
+	param := c.Param("id")
+	id, err := strconv.ParseUint(param, 10, 32)
+	if err != nil {
+		response.JSONError(c, http.StatusBadRequest, "Invalid album ID", err.Error())
+		return
+	}
+
+	var payload struct {
+		MediaID uint `json:"mediaId" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		response.JSONError(c, http.StatusBadRequest, "Invalid payload", err.Error())
+		return
+	}
+
+	err = h.albumService.SetCover(uint(id), payload.MediaID)
+	if err != nil {
+		response.JSONError(c, http.StatusInternalServerError, "Failed to set cover", err.Error())
+		return
+	}
+
+	response.JSONSuccess(c, gin.H{"message": "Cover set successfully"})
+}

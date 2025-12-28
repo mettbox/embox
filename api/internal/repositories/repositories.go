@@ -44,6 +44,7 @@ type AlbumRepository interface {
 	GetMediaIdsByAlbumId(albumId uint) ([]uint, error)
 	AddMediaToAlbum(albumId uint, mediaIds []uint, isCover bool) error
 	RemoveMediaFromAlbum(albumId uint, mediaIds []uint) error
+	SetCover(albumId uint, mediaId uint) error
 }
 
 type Repositories struct {

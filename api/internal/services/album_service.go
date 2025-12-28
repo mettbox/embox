@@ -185,3 +185,7 @@ func (s *AlbumService) AddMediaToAlbum(albumId uint, mediaIds []uint, isCover bo
 func (s *AlbumService) RemoveMediaFromAlbum(albumId uint, mediaIds []uint) error {
 	return s.albumRepo.RemoveMediaFromAlbum(albumId, mediaIds)
 }
+
+func (s *AlbumService) SetCover(albumId uint, mediaId uint) error {
+	return s.albumRepo.SetCover(albumId, mediaId)
+}
