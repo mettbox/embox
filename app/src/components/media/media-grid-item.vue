@@ -1,7 +1,7 @@
 <template>
   <div
     class="media-grid-item"
-    :class="{ 'is-single-column': props.isSingleColumn }"
+    :class="{ 'is-single-column': props.isSingleColumn, 'has-hidden-icons': props.hasHiddenIcons }"
     :data-id="props.media.id"
   >
     <ion-thumbnail v-if="props.media.type === 'audio'">
@@ -51,6 +51,7 @@ const props = defineProps<{
   media: Media;
   isSelectMode: boolean;
   isSingleColumn?: boolean;
+  hasHiddenIcons?: boolean;
 }>();
 
 const { getThumbnailUrl } = useThumbnail();
@@ -78,6 +79,12 @@ const selectedMedia = useSelectedMediaStore();
     ion-thumbnail {
       aspect-ratio: 1 / 1;
       height: auto;
+    }
+  }
+
+  &.has-hidden-icons {
+    ion-icon {
+      display: none;
     }
   }
 

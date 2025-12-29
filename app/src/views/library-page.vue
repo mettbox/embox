@@ -59,6 +59,7 @@
             :is-select-mode="isSelectMode"
             :media="media"
             :is-single-column="columns === 1"
+            :has-hidden-icons="columns > 11"
             @click="onMediaOpen(media)"
           />
         </template>
@@ -134,7 +135,7 @@ import {
   createGesture,
 } from '@ionic/vue';
 import { addCircleOutline } from 'ionicons/icons';
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAppStore } from '@/stores/app.store';
 import { useMeStore } from '@/stores/me.store';
@@ -609,33 +610,65 @@ const initGestures = () => {
 
       const currentDistance = Math.hypot(touches[0].pageX - touches[1].pageX, touches[0].pageY - touches[1].pageY);
 
+      const findPivot = () => {
+        const centerX = (touches[0].clientX + touches[1].clientX) / 2;
+        const centerY = (touches[0].clientY + touches[1].clientY) / 2;
+
+        let el = document.elementFromPoint(centerX, centerY);
+        while (el && !el.classList.contains('media-grid-item') && el.parentElement) {
+          el = el.parentElement;
+        }
+
+        if (el && el.classList.contains('media-grid-item')) {
+          const rect = el.getBoundingClientRect();
+          return { el: el as HTMLElement, offset: rect.top };
+        }
+        return null;
+      };
+
       if (startDistance === 0) {
         startDistance = currentDistance;
         initialColumns = columns.value;
+        const grid = document.querySelector('.media-grid');
+        if (grid) grid.classList.add('is-pinching');
         return;
       }
 
       const scale = currentDistance / startDistance;
       let targetColumns = initialColumns;
 
-      // Map scale to columns
-      if (scale > 1.05) {
-        const steps = Math.floor((scale - 1) / 0.15);
+      // Make pinch-zoom less sensitive (higher thresholds and steps)
+      if (scale > 1.1) {
+        const steps = Math.floor((scale - 1.1) / 0.25) + 1;
         targetColumns = Math.max(1, initialColumns - steps);
-      } else if (scale < 0.95) {
-        const steps = Math.floor((1 - scale) / 0.08);
-        // Allow up to 20 columns
+      } else if (scale < 0.9) {
+        const steps = Math.floor((0.9 - scale) / 0.15) + 1;
         targetColumns = Math.min(20, initialColumns + steps);
       }
 
       if (targetColumns !== columns.value) {
+        const pivot = findPivot();
         columns.value = targetColumns;
         updateVisibleRange();
+
+        if (pivot && contentRef.value) {
+          // Double frame wait to ensure layout is applied on iPhone
+          requestAnimationFrame(() => {
+            requestAnimationFrame(async () => {
+              const scrollEl = await (contentRef.value as any).$el.getScrollElement();
+              const currentScroll = scrollEl.scrollTop;
+              const newRect = pivot.el.getBoundingClientRect();
+              const diff = newRect.top - pivot.offset;
+              (contentRef.value as any).$el.scrollToPoint(0, currentScroll + diff, 0);
+            });
+          });
+        }
       }
     },
     onEnd: () => {
       startDistance = 0;
-      // Restore default touch action
+      const grid = document.querySelector('.media-grid');
+      if (grid) grid.classList.remove('is-pinching');
       contentEl.style.touchAction = '';
     },
   });
@@ -685,6 +718,10 @@ ion-content {
 
     /* Smooth transitions when column count changes */
     transition: grid-template-columns 0.3s ease-out;
+
+    &.is-pinching {
+      transition: none !important;
+    }
 
     .grid-header {
       grid-column: 1 / -1;
