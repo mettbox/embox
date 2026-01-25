@@ -129,54 +129,78 @@ func (s *StorageService) Upload(data []byte, filePath string) error {
 	return nil
 }
 
-// DOwnload loads a file and returns the data + MIME type.
+// Download loads a file and returns the data + MIME type.
 func (s *StorageService) Download(path string) ([]byte, string, error) {
-	if err := s.Auth(); err != nil {
+	resp, err := s.DownloadStream(path, nil)
+	if err != nil {
 		return nil, "", err
+	}
+	defer resp.Body.Close()
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to read stream data: %w", err)
+	}
+
+	return data, resp.Header.Get("Content-Type"), nil
+}
+
+// DownloadStream returns an http.Response for the file at path.
+// The caller is responsible for closing the response body.
+func (s *StorageService) DownloadStream(path string, headers http.Header) (*http.Response, error) {
+	if err := s.Auth(); err != nil {
+		return nil, err
 	}
 
 	// Get the file download link
 	fileURL := fmt.Sprintf("%s/repos/%s/file/?p=/%s", s.config.Url, s.config.RepoID, path)
 	req, err := http.NewRequest("GET", fileURL, nil)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to create download request: %w", err)
+		return nil, fmt.Errorf("failed to create download request: %w", err)
 	}
 	req.Header.Set("Authorization", "Token "+s.token)
 
 	resp, err := s.client.Do(req)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to request file url: %w", err)
+		return nil, fmt.Errorf("failed to request file url: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		b, _ := io.ReadAll(resp.Body)
-		return nil, "", fmt.Errorf("file url request failed: %s", string(b))
+		return nil, fmt.Errorf("file url request failed: %s", string(b))
 	}
 
 	var realURL string
 	if err := json.NewDecoder(resp.Body).Decode(&realURL); err != nil {
-		return nil, "", fmt.Errorf("failed to decode file url: %w", err)
+		return nil, fmt.Errorf("failed to decode file url: %w", err)
 	}
 
-	// Load the actual file
-	fileResp, err := s.client.Get(realURL)
+	// Load the actual stream
+	fileReq, err := http.NewRequest("GET", realURL, nil)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to download file: %w", err)
+		return nil, fmt.Errorf("failed to create stream request: %w", err)
 	}
-	defer fileResp.Body.Close()
 
-	if fileResp.StatusCode != http.StatusOK {
+	// Pass through headers (important for Range requests)
+	for key, values := range headers {
+		for _, value := range values {
+			fileReq.Header.Add(key, value)
+		}
+	}
+
+	fileResp, err := s.client.Do(fileReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to download stream: %w", err)
+	}
+
+	if fileResp.StatusCode != http.StatusOK && fileResp.StatusCode != http.StatusPartialContent {
+		defer fileResp.Body.Close()
 		b, _ := io.ReadAll(fileResp.Body)
-		return nil, "", fmt.Errorf("download failed: %s", string(b))
+		return nil, fmt.Errorf("stream download failed with status %d: %s", fileResp.StatusCode, string(b))
 	}
 
-	data, err := io.ReadAll(fileResp.Body)
-	if err != nil {
-		return nil, "", fmt.Errorf("failed to read file response: %w", err)
-	}
-
-	return data, fileResp.Header.Get("Content-Type"), nil
+	return fileResp, nil
 }
 
 // Delete entfernt eine Datei oder ein Verzeichnis aus dem Repo.

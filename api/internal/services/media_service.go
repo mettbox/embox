@@ -81,40 +81,40 @@ func (s *MediaService) GetMediaByID(id uint, userEmail string) (*models.Media, e
 	return media, nil
 }
 
-// GetThumbnail retrieves the media thumbnail data and its MIME type by media ID.
-func (s *MediaService) GetThumbnail(id uint) ([]byte, string, error) {
+// GetThumbnail returns the local file path and its MIME type by media ID.
+func (s *MediaService) GetThumbnail(id uint) (string, string, error) {
 	media, err := s.mediaRepo.GetById(id)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to find media with id %d: %w", id, err)
+		return "", "", fmt.Errorf("failed to find media with id %d: %w", id, err)
 	}
 	if media == nil {
-		return nil, "", fmt.Errorf("media with id %d not found", id)
+		return "", "", fmt.Errorf("media with id %d not found", id)
 	}
 
-	data, mimeType, err := s.loadMediaFromDisk(media.Path())
+	filePath, mimeType, err := s.getMediaLocalPath(media.Path())
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to load media thumbnail: %w", err)
+		return "", "", fmt.Errorf("failed to get media thumbnail path: %w", err)
 	}
 
-	return data, mimeType, nil
+	return filePath, mimeType, nil
 }
 
-// GetMediaFile retrieves the full media file data and its MIME type by media ID.
-func (s *MediaService) GetMediaFile(id uint) ([]byte, string, error) {
+// GetMediaFile retrieves the full media file as a response (containing the body stream) and its metadata.
+func (s *MediaService) GetMediaFile(id uint, headers http.Header) (*http.Response, *models.Media, error) {
 	media, err := s.mediaRepo.GetById(id)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to find media with id %d: %w", id, err)
+		return nil, nil, fmt.Errorf("failed to find media with id %d: %w", id, err)
 	}
 	if media == nil {
-		return nil, "", fmt.Errorf("media with id %d not found", id)
+		return nil, nil, fmt.Errorf("media with id %d not found", id)
 	}
 
-	data, mimeType, err := s.storage.Download(media.RemotePath())
+	resp, err := s.storage.DownloadStream(media.RemotePath(), headers)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to download media file: %w", err)
+		return nil, nil, fmt.Errorf("failed to download media stream: %w", err)
 	}
 
-	return data, mimeType, nil
+	return resp, media, nil
 }
 
 // Creates a new media entry from the provided metadata and file data.
@@ -300,15 +300,17 @@ func (s *MediaService) DeleteMedia(ids []uint) error {
 
 // === private functions ===
 
-// loadMediaFromDisk reads the media file from disk and returns its data and MIME type.
-func (s *MediaService) loadMediaFromDisk(path string) ([]byte, string, error) {
+// getMediaLocalPath returns the absolute local path and its MIME type.
+func (s *MediaService) getMediaLocalPath(path string) (string, string, error) {
 	filePath := filepath.Join(MediaDir, path)
-	data, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, "", err
+	// Check if file exists
+	if _, err := os.Stat(filePath); err != nil {
+		return "", "", err
 	}
-	mimeType := http.DetectContentType(data)
-	return data, mimeType, nil
+
+	// We still need to detect the content type for some cases, but gin.File will do it too
+	// For now, simple detection from extension or first bytes if needed
+	return filePath, "image/webp", nil // Defaulting to webp as thumbnails are transformed
 }
 
 // getMediaType determines the media type based on the MIME type.

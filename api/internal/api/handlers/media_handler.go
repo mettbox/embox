@@ -6,6 +6,7 @@ import (
 	"embox/internal/api/response"
 	"embox/internal/services"
 	"encoding/json"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -48,15 +49,14 @@ func (h *MediaHandler) GetMediaThumbnail(c *gin.Context) {
 		return
 	}
 
-	data, mimeType, err := h.mediaService.GetThumbnail(uint(id))
+	filePath, _, err := h.mediaService.GetThumbnail(uint(id))
 	if err != nil {
-		// response.JSONError(c, http.StatusNotFound, "File not found", err.Error())
 		c.Data(http.StatusOK, "image/webp", defaultThumbnail)
 		return
 	}
 
 	c.Header("Cache-Control", "public, max-age=31536000, immutable")
-	c.Data(200, mimeType, data)
+	c.File(filePath)
 }
 
 // Get media original file from storage by ID
@@ -66,14 +66,34 @@ func (h *MediaHandler) GetMediaFile(c *gin.Context) {
 		response.JSONError(c, http.StatusBadRequest, "Invalid media ID", err.Error())
 		return
 	}
-	data, mimeType, err := h.mediaService.GetMediaFile(uint(id))
+
+	// We pass the incoming headers to the media service to support Range requests
+	resp, media, err := h.mediaService.GetMediaFile(uint(id), c.Request.Header)
 	if err != nil {
 		response.JSONError(c, http.StatusNotFound, "File not found", err.Error())
 		return
 	}
+	defer resp.Body.Close()
 
+	// Proxy relevant headers from the storage response
+	c.Header("Content-Type", resp.Header.Get("Content-Type"))
+	c.Header("Content-Length", resp.Header.Get("Content-Length"))
+	if rangeHdr := resp.Header.Get("Content-Range"); rangeHdr != "" {
+		c.Header("Content-Range", rangeHdr)
+	}
+	if acceptHdr := resp.Header.Get("Accept-Ranges"); acceptHdr != "" {
+		c.Header("Accept-Ranges", acceptHdr)
+	}
+
+	// Set Cache-Control and Last-Modified for better caching behaviour
 	c.Header("Cache-Control", "public, max-age=31536000, immutable")
-	c.Data(200, mimeType, data)
+	c.Header("Last-Modified", media.UpdatedAt.Format(http.TimeFormat))
+
+	// Status code must match the storage response (e.g. 206 for Partial Content)
+	c.Status(resp.StatusCode)
+
+	// Stream the body directly to the client
+	io.Copy(c.Writer, resp.Body)
 }
 
 // Upload one or multiple media files
