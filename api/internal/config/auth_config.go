@@ -22,8 +22,8 @@ func LoadAuthConfig(domain string) *AuthConfig {
 
 	return &AuthConfig{
 		Domain:               domain,
-		AccessExpiration:     env.GetEnvAsInt("AUTH_ACCESS_COOKIE_EXPIRATION", 60*60),       // 1 hour
-		RefreshExpiration:    env.GetEnvAsInt("AUTH_REFRESH_COOKIE_EXPIRATION", 5*60*60*24), // 5 days
+		AccessExpiration:     env.GetEnvAsInt("AUTH_ACCESS_COOKIE_EXPIRATION", 60*60),        // 1 hour
+		RefreshExpiration:    env.GetEnvAsInt("AUTH_REFRESH_COOKIE_EXPIRATION", 50*60*60*24), // 50 days
 		AccessSecret:         env.GetEnv("AUTH_ACCESS_JWT_SECRET", "emboxAccessSecret"),
 		RefreshSecret:        env.GetEnv("AUTH_REFRESH_JWT_SECRET", "emboxRefreshSecret"),
 		IsSecure:             isSecure,
