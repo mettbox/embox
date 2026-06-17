@@ -61,6 +61,7 @@ npm run dev
 - [LuckyCloud REST API](https://docs.luckycloud.de/en/cloud-storage/rest-api)
 - [LuckyCloud API Documentation](https://storage.luckycloud.de/published/api-dokumentation/home.md)
 - [uberspace Web Backend](https://manual.uberspace.de/web-backends/)
+- Create Google App Password: log into account -> security -> and search for "App-Passwörter"
 
 ## Deployment: uberspace
 

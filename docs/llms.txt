@@ -1,0 +1,339 @@
+# EmBox
+
+> A media management web application using luckycloud.de for cloud storage. Users can upload photos, videos and audio files, organise them into albums, and share them with invited users. Admins see all content; regular users only see public media and albums.
+
+- Production URL: https://em.mettbox.de
+- API base: https://em.mettbox.de/api
+- Repository root: `/` (monorepo with `api/` and `app/` subdirectories)
+
+## Tech Stack
+
+| Layer      | Technology                                                  |
+|------------|-------------------------------------------------------------|
+| Backend    | Go 1.25.1, Gin v1.10.0, GORM v1.25, gorm MySQL driver      |
+| Frontend   | Vue 3.3, TypeScript 5.6, Ionic v8, Pinia v3, Vue Router v4 |
+| Database   | MariaDB 10.6                                                |
+| Storage    | LuckyCloud (WebDAV/REST API) for original files             |
+| Build tool | Vite 5.2 (frontend), `air` for hot-reload (backend)         |
+| PWA        | vite-plugin-pwa with Workbox (30-day asset cache)           |
+| Mobile     | Ionic Capacitor (iOS/Android native builds)                 |
+| i18n       | vue-i18n v11, German default                                |
+
+## Repository Structure
+
+```
+em/
+├── api/                          # Go backend
+│   ├── cmd/api/main.go           # Entry point
+│   ├── internal/
+│   │   ├── api/
+│   │   │   ├── handlers/         # HTTP request handlers
+│   │   │   ├── middleware/       # Auth, CORS, CSRF, rate-limit, logging
+│   │   │   ├── routes/           # Route registration per domain
+│   │   │   ├── dto/              # Request/response DTOs
+│   │   │   └── response/         # Response formatting helpers
+│   │   ├── config/               # Config structs loaded from .env
+│   │   ├── infrastructure/       # DB init & HTTP server setup
+│   │   ├── models/               # GORM database models
+│   │   ├── repositories/         # Data access layer (interfaces + implementations)
+│   │   └── services/             # Business logic + email templates
+│   ├── pkg/env/                  # Env variable utilities
+│   ├── media/                    # Local thumbnail storage (year/month subdirs)
+│   ├── go.mod
+│   ├── .env.example
+│   └── .air.toml                 # Hot-reload config
+├── app/                          # Vue 3 frontend
+│   ├── src/
+│   │   ├── main.ts               # App entry point
+│   │   ├── app.vue               # Root component
+│   │   ├── router/               # Vue Router + navigation guards
+│   │   ├── stores/               # Pinia stores (app, me, upload, selectedMedia)
+│   │   ├── views/                # Page components (7 pages)
+│   │   ├── components/           # Reusable UI components (23 components)
+│   │   ├── services/             # HTTP client + domain service modules
+│   │   ├── composables/          # Vue composition utilities
+│   │   ├── i18n/                 # Translation files
+│   │   └── theme/                # CSS variables (dark/light mode)
+│   ├── vite.config.ts
+│   ├── tsconfig.json
+│   ├── ionic.config.json
+│   └── package.json
+├── docker-compose.yml            # MariaDB 10.6 dev database
+├── data/                         # MariaDB data volume (gitignored)
+├── resources/                    # Favicon assets
+└── README.md
+```
+
+## Backend Architecture
+
+The API follows a **layered architecture** with dependency injection:
+
+```
+Routes → Handlers → Services → Repositories → Models (GORM)
+```
+
+- **Routes** register HTTP endpoints and apply middleware per group
+- **Handlers** validate requests, call services, format responses
+- **Services** implement business logic (auth, media processing, email)
+- **Repositories** abstract DB access; each domain has an interface + GORM implementation
+- **Models** are GORM structs with `TableName()` overrides and lifecycle hooks
+
+Middleware stack (applied globally):
+`Recovery → Logging → Language → CORS → CSRF → Auth`
+
+Then per protected group: `RequireAuth`
+
+## API Endpoints
+
+All endpoints are prefixed with `/api` in production (proxy strips the prefix).
+
+### Public
+
+| Method | Path             | Description                                  |
+|--------|------------------|----------------------------------------------|
+| GET    | /health          | Health check                                 |
+| GET    | /csrf-token      | Fetch CSRF token (stores in cookie)          |
+| POST   | /auth/token      | Request magic-link login token (rate-limited)|
+| POST   | /auth/login      | Verify token and issue JWT cookie (rate-limited)|
+| POST   | /auth/refresh    | Refresh JWT access token (rate-limited)      |
+| POST   | /auth/logout     | Clear auth cookies                           |
+
+### Protected (require valid JWT cookie)
+
+#### Users `/user`
+| Method | Path       | Description              |
+|--------|------------|--------------------------|
+| GET    | /user/     | List all users           |
+| POST   | /user/     | Create user (admin only) |
+| PUT    | /user/:id  | Update user              |
+| DELETE | /user/:id  | Delete user              |
+
+#### Media `/media`
+| Method | Path                | Description                          |
+|--------|---------------------|--------------------------------------|
+| GET    | /media/             | List media (user-scoped or all)      |
+| GET    | /media/:id/thumbnail| Stream local WebP thumbnail          |
+| GET    | /media/:id/file     | Stream original file from LuckyCloud |
+| POST   | /media/             | Upload media (multipart/form-data)   |
+| PUT    | /media/             | Update caption/date of media items   |
+| DELETE | /media/             | Delete media items                   |
+
+#### Albums `/album`
+| Method | Path                  | Description                    |
+|--------|-----------------------|--------------------------------|
+| GET    | /album/               | List all albums                |
+| GET    | /album/:id            | Get album with media items     |
+| POST   | /album/               | Create album                   |
+| PUT    | /album/:id            | Update album name/description  |
+| PUT    | /album/:id/cover      | Set cover image for album      |
+| DELETE | /album/:id            | Delete album                   |
+| POST   | /album/:id/media      | Add media items to album       |
+| DELETE | /album/:id/media      | Remove media items from album  |
+
+#### Favourites `/favourite`
+| Method | Path                  | Description                              |
+|--------|-----------------------|------------------------------------------|
+| GET    | /favourite/user       | List users with their latest favourite   |
+| GET    | /favourite/user/:id   | Get all favourites for a user            |
+| POST   | /favourite/           | Add media to favourites                  |
+| DELETE | /favourite/           | Remove media from favourites             |
+
+## Data Models
+
+### User (`users` table)
+```go
+type User struct {
+    ID             uuid.UUID  // UUID primary key, auto-generated
+    Name           string     // varchar(48), nullable
+    Email          string     // varchar(128), unique, not null
+    IsAdmin        bool       // default false
+    Token          string     // one-time login token, varchar(80)
+    TokenCreatedAt time.Time  // when token was issued
+    CreatedAt      time.Time
+    UpdatedAt      time.Time
+    LastLoginAt    *time.Time // null until first login
+    Favourites     []Favourite
+}
+```
+
+### Media (`media` table)
+```go
+type Media struct {
+    ID        uint       // auto-increment primary key
+    Date      time.Time  // media date (from EXIF or upload time)
+    UserID    *uuid.UUID // nullable FK → users, SET NULL on delete
+    FileExt   string     // original file extension, e.g. "jpg"
+    Type      string     // "image" | "video" | "audio"
+    Caption   string     // nullable, varchar(255)
+    CreatedAt time.Time
+    UpdatedAt time.Time
+    // Computed (not stored):
+    IsFavourite       bool
+    FavouriteUserID   string
+    FavouriteUserName string
+    // Relations:
+    Albums    []Album    // many-to-many via album_media
+}
+// Local path:  yyyy/mm/dd_ID.webp  (images/video thumbnails)
+// Remote path: yyyy/mm/dd_ID.FileExt  (LuckyCloud originals)
+```
+
+### Album (`albums` table)
+```go
+type Album struct {
+    ID          uint       // auto-increment primary key
+    Name        string     // varchar(255), not null
+    Description string     // text, nullable
+    UserID      *uuid.UUID // nullable FK → users, SET NULL on delete
+    CreatedAt   time.Time
+    UpdatedAt   time.Time
+    Media       []Media    // many-to-many via album_media
+    AlbumMedia  []AlbumMedia
+    MediaCount  int        // computed field
+}
+
+type AlbumMedia struct {
+    AlbumID uint  // composite PK
+    MediaID uint  // composite PK
+    IsCover bool  // marks the album cover image
+}
+```
+
+> **Note:** GORM doesn't handle cascading deletes in many-to-many correctly. The `fk_albums_album_media` constraint must be manually altered to `ON DELETE CASCADE` in the DB after migration.
+
+### Favourite (`favourites` table)
+```go
+type Favourite struct {
+    ID        uint
+    UserID    uuid.UUID  // unique(UserID, MediaID), CASCADE on delete
+    MediaID   uint       // unique(UserID, MediaID), CASCADE on delete
+    CreatedAt time.Time
+}
+```
+
+## Frontend Structure
+
+### Pages (Views)
+
+| Route              | Component             | Description                           |
+|--------------------|-----------------------|---------------------------------------|
+| `/`                | HomePage              | Landing page                          |
+| `/login/:email?`   | LoginRequestPage      | Email-based magic-link login          |
+| `/verify-token`    | LoginTokenPage        | Token verification                    |
+| `/library`         | LibraryPage           | Main media gallery                    |
+| `/collections`     | CollectionsPage       | Browse albums                         |
+| `/favourites/:id`  | LibraryPage           | User's favourite media                |
+| `/albums/:id`      | LibraryPage           | Specific album content                |
+| `/users`           | UsersPage             | Admin: user management                |
+| `/profile`         | ProfilePage           | User profile settings                 |
+
+Route guard: public paths are `/`, `/login`, `/verify-token`. All others require authentication. `/users` requires `isAdmin`.
+
+### Pinia Stores
+
+| Store                  | File                     | Responsibility                                     |
+|------------------------|--------------------------|----------------------------------------------------|
+| `useAppStore`          | stores/app.store.ts      | Loading, notifications, dark mode, breakpoints     |
+| `useMeStore`           | stores/me.store.ts       | Current user, auth actions (login/logout/update)   |
+| `useUploadStore`       | stores/upload.store.ts   | Upload queue, batch upload (6 at a time), progress |
+| `useSelectedMediaStore`| stores/selectedMedia.store.ts | Multi-select state for batch actions          |
+
+### HTTP Service
+
+`src/services/http.service.ts` — central HTTP client:
+- Base URL from `VITE_API_URL` env variable
+- Cookie-based auth (`credentials: 'include'`)
+- Automatic CSRF token fetch + `X-XSRF-TOKEN` header
+- 401 → auto-refresh session, retry request
+- 419 → CSRF token refresh, retry request
+- 60s default timeout (uploads: 10 min), AbortController
+- Sets global loading state and error notifications
+
+Domain service modules: `media.service.ts`, `album.service.ts`, `user.service.ts`, `favourite.service.ts`
+
+### Key Components
+
+```
+components/
+├── app/          app-header, app-menu, app-notification, app-loading, app-logo
+├── media/        media-grid-item, media-upload-modal, media-edit-modal,
+│                 media-single-modal, media-zoom, media-toolbar, media-datepicker,
+│                 media-filter-button, media-select-button, media-select-popover
+├── album/        album-form, album-edit-modal, album-select-modal
+├── user/         user-list-item, user-modal
+├── collection/   collection-list-item
+└── v-fit-to-width.vue   (responsive image sizing)
+```
+
+## Configuration
+
+Environment variables are loaded via `godotenv` from `api/.env` (copy from `api/.env.example`).
+
+Key variable groups:
+- **Database**: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
+- **Server**: `SERVER_HOST`, `SERVER_PORT`, `SERVER_DOMAIN`
+- **Auth**: JWT secret, cookie name, expiry
+- **CSRF**: secret key, cookie/header names
+- **Email/SMTP**: host, port, sender, credentials
+- **Storage**: local media path, LuckyCloud endpoint + credentials
+- **Router**: release mode, rate limit count
+- **Admin**: `ADMIN_EMAIL` (bootstraps first admin user)
+
+Frontend config via Vite env variables:
+- `VITE_API_URL` — API base URL (dev: `http://192.168.64.1:2705`, prod: `https://em.mettbox.de/api`)
+
+## Development Setup
+
+```sh
+# 1. Start database
+docker compose up -d
+
+# 2. Start API (in api/ directory)
+cp api/.env.example api/.env
+# Edit api/.env with your values
+cd api
+go install github.com/air-verse/air@latest
+air                          # with hot reload
+# or: go run cmd/api/main.go
+
+# 3. Start frontend (in app/ directory)
+cd app
+nvm use
+npm install
+npm run dev                  # serves on http://192.168.64.1:5173
+```
+
+API runs on port **2705** by default. Frontend dev server proxies to this address via `VITE_API_URL`.
+
+## Deployment (uberspace)
+
+- **Platform**: uberspace, CentOS 7, x86_64, Go 1.25.1
+- **App (static)**: `/home/mettbox/public/em.mettbox.de` → https://em.mettbox.de
+- **API (process)**: `/home/mettbox/em/main` → https://em.mettbox.de/api
+
+```sh
+# Configure web backend proxy
+uberspace web backend set em.mettbox.de/api --http --port 2705 --remove-prefix
+
+# Build API on server
+cd /home/mettbox/em/embox/api
+git pull
+go build -o ../../main ./cmd/api/main.go
+chmod +x /home/mettbox/em/main
+
+# Run detached
+cd /home/mettbox/em
+nohup ./main > /dev/null 2>&1 &
+
+# Build and deploy frontend locally
+cd app
+npm run build                # outputs to dist/
+# copy dist/ to /home/mettbox/public/em.mettbox.de on server
+```
+
+Stop API: `ps -aux | grep main` then `kill <PID>`.
+
+## External Integrations
+
+- **LuckyCloud**: WebDAV/REST storage for original media files. Docs: https://docs.luckycloud.de/en/cloud-storage/rest-api
+- **Email (SMTP)**: User invitations and magic-link login tokens. Supports Google App Passwords.
