@@ -29,6 +29,24 @@ const pwa: Partial<VitePWAOptions> = {
   },
 };
 
+const devProxy = {
+  '/api': {
+    target: 'http://localhost:2705',
+    changeOrigin: true,
+    rewrite: (path: string) => path.replace(/^\/api/, ''),
+    configure: (proxy: any) => {
+      proxy.on('proxyRes', (proxyRes: any) => {
+        const cookies = proxyRes.headers['set-cookie'];
+        if (cookies) {
+          proxyRes.headers['set-cookie'] = (Array.isArray(cookies) ? cookies : [cookies]).map(
+            (c: string) => c.replace(/;\s*domain=[^;]*/gi, ''),
+          );
+        }
+      });
+    },
+  },
+};
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue(), VitePWA(pwa)],
@@ -39,5 +57,11 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+  },
+  server: {
+    proxy: devProxy,
+  },
+  preview: {
+    proxy: devProxy,
   },
 });

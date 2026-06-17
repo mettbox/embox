@@ -5,9 +5,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "VITE_API_URL=http://192.168.178.21:2705 vite --host",
+    "dev": "VITE_API_URL=/api vite --host",
     "build": "vue-tsc && VITE_API_URL=https://em.mettbox.de/api vite build",
-    "preview": "VITE_API_URL=http://192.168.178.184:2705 vite preview --host",
+    "preview": "VITE_API_URL=/api vite preview --host",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "format": "prettier --write src/"
   },
