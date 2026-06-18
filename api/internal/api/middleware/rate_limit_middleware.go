@@ -9,21 +9,50 @@ import (
 	"golang.org/x/time/rate"
 )
 
-var clients = make(map[string]*rate.Limiter)
-var mu sync.Mutex
+const clientTTL = 5 * time.Minute
+
+type rateLimitClient struct {
+	limiter  *rate.Limiter
+	lastSeen time.Time
+}
+
+var (
+	clients   = make(map[string]*rateLimitClient)
+	mu        sync.Mutex
+	cleanOnce sync.Once
+)
+
+func startCleanup() {
+	cleanOnce.Do(func() {
+		go func() {
+			for {
+				time.Sleep(clientTTL)
+				mu.Lock()
+				for ip, c := range clients {
+					if time.Since(c.lastSeen) > clientTTL {
+						delete(clients, ip)
+					}
+				}
+				mu.Unlock()
+			}
+		}()
+	})
+}
 
 func getLimiter(ip string, r rate.Limit, b int) *rate.Limiter {
 	mu.Lock()
 	defer mu.Unlock()
-	limiter, exists := clients[ip]
+	c, exists := clients[ip]
 	if !exists {
-		limiter = rate.NewLimiter(r, b)
-		clients[ip] = limiter
+		c = &rateLimitClient{limiter: rate.NewLimiter(r, b)}
+		clients[ip] = c
 	}
-	return limiter
+	c.lastSeen = time.Now()
+	return c.limiter
 }
 
 func RateLimitMiddleware(maxRequests int, duration time.Duration) gin.HandlerFunc {
+	startCleanup()
 	return func(c *gin.Context) {
 		ip := c.ClientIP()
 		limiter := getLimiter(ip, rate.Every(duration/time.Duration(maxRequests)), maxRequests)
