@@ -190,3 +190,18 @@ func (s *AlbumService) RemoveMediaFromAlbum(albumId uint, mediaIds []uint) error
 func (s *AlbumService) SetCover(albumId uint, mediaId uint) error {
 	return s.albumRepo.SetCover(albumId, mediaId)
 }
+
+func (s *AlbumService) IsOwner(userEmail string, albumID uint) (bool, error) {
+	user, err := s.userRepo.GetByEmail(userEmail)
+	if err != nil || user == nil {
+		return false, fmt.Errorf("user not found")
+	}
+	if user.IsAdmin {
+		return true, nil
+	}
+	album, err := s.albumRepo.GetById(albumID)
+	if err != nil {
+		return false, err
+	}
+	return album.UserID != nil && *album.UserID == user.ID, nil
+}

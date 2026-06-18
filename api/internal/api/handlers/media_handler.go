@@ -136,6 +136,24 @@ func (h *MediaHandler) UploadMedia(c *gin.Context) {
 	response.JSONSuccess(c, uploaded)
 }
 
+func (h *MediaHandler) assertOwnerOfAll(c *gin.Context, ids []uint) bool {
+	userEmail, ok := GetContextUserEmail(c)
+	if !ok {
+		response.JSONError(c, http.StatusUnauthorized, "Unauthorized", "")
+		return false
+	}
+	owned, err := h.mediaService.IsOwnerOfAll(userEmail, ids)
+	if err != nil {
+		response.JSONError(c, http.StatusInternalServerError, "Failed to verify ownership", err.Error())
+		return false
+	}
+	if !owned {
+		response.JSONError(c, http.StatusForbidden, "Forbidden", "")
+		return false
+	}
+	return true
+}
+
 // Update one or multiple media items
 func (h *MediaHandler) UpdateMedia(c *gin.Context) {
 	userEmail, ok := GetContextUserEmail(c)
@@ -150,6 +168,14 @@ func (h *MediaHandler) UpdateMedia(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		response.JSONError(c, http.StatusBadRequest, "Invalid request payload", err.Error())
+		return
+	}
+
+	ids := make([]uint, len(payload.Updates))
+	for i, u := range payload.Updates {
+		ids[i] = u.ID
+	}
+	if !h.assertOwnerOfAll(c, ids) {
 		return
 	}
 
@@ -173,6 +199,10 @@ func (h *MediaHandler) DeleteMedia(c *gin.Context) {
 	}
 	if len(payload.IDs) == 0 {
 		response.JSONError(c, http.StatusBadRequest, "No IDs provided", "")
+		return
+	}
+
+	if !h.assertOwnerOfAll(c, payload.IDs) {
 		return
 	}
 

@@ -74,11 +74,33 @@ func (h *AlbumHandler) GetAlbumByID(c *gin.Context) {
 	response.JSONSuccess(c, album)
 }
 
+func (h *AlbumHandler) assertOwner(c *gin.Context, albumID uint) bool {
+	userEmail, ok := GetContextUserEmail(c)
+	if !ok {
+		response.JSONError(c, http.StatusUnauthorized, "Unauthorized", "")
+		return false
+	}
+	owned, err := h.albumService.IsOwner(userEmail, albumID)
+	if err != nil {
+		response.JSONError(c, http.StatusInternalServerError, "Failed to verify ownership", err.Error())
+		return false
+	}
+	if !owned {
+		response.JSONError(c, http.StatusForbidden, "Forbidden", "")
+		return false
+	}
+	return true
+}
+
 func (h *AlbumHandler) UpdateAlbum(c *gin.Context) {
 	param := c.Param("id")
 	id, err := strconv.ParseUint(param, 10, 32)
 	if err != nil {
 		response.JSONError(c, http.StatusBadRequest, "Invalid album ID", err.Error())
+		return
+	}
+
+	if !h.assertOwner(c, uint(id)) {
 		return
 	}
 
@@ -105,6 +127,10 @@ func (h *AlbumHandler) DeleteAlbum(c *gin.Context) {
 		return
 	}
 
+	if !h.assertOwner(c, uint(id)) {
+		return
+	}
+
 	err = h.albumService.DeleteAlbum(uint(id))
 	if err != nil {
 		response.JSONError(c, http.StatusInternalServerError, "Failed to delete album", err.Error())
@@ -119,6 +145,10 @@ func (h *AlbumHandler) AddMediaToAlbum(c *gin.Context) {
 	id, err := strconv.ParseUint(param, 10, 32)
 	if err != nil {
 		response.JSONError(c, http.StatusBadRequest, "Invalid album ID", err.Error())
+		return
+	}
+
+	if !h.assertOwner(c, uint(id)) {
 		return
 	}
 
@@ -148,6 +178,10 @@ func (h *AlbumHandler) RemoveMediaFromAlbum(c *gin.Context) {
 		return
 	}
 
+	if !h.assertOwner(c, uint(id)) {
+		return
+	}
+
 	var payload struct {
 		MediaIDs []uint `json:"mediaIds" binding:"required"`
 	}
@@ -170,6 +204,10 @@ func (h *AlbumHandler) SetCover(c *gin.Context) {
 	id, err := strconv.ParseUint(param, 10, 32)
 	if err != nil {
 		response.JSONError(c, http.StatusBadRequest, "Invalid album ID", err.Error())
+		return
+	}
+
+	if !h.assertOwner(c, uint(id)) {
 		return
 	}
 

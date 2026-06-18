@@ -279,6 +279,26 @@ func (s *MediaService) UpdateMediaBatch(updates []dto.MediaUpdateRequestDto, use
 	return updatedMedia, nil
 }
 
+func (s *MediaService) IsOwnerOfAll(userEmail string, ids []uint) (bool, error) {
+	user, err := s.userRepo.GetByEmail(userEmail)
+	if err != nil || user == nil {
+		return false, fmt.Errorf("user not found")
+	}
+	if user.IsAdmin {
+		return true, nil
+	}
+	mediaList, err := s.mediaRepo.GetByIDs(ids)
+	if err != nil {
+		return false, err
+	}
+	for _, m := range mediaList {
+		if m.UserID == nil || *m.UserID != user.ID {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
 // DeleteMedia deletes media items by their IDs, removing both local and remote files.
 func (s *MediaService) DeleteMedia(ids []uint) error {
 	mediaList, err := s.mediaRepo.GetByIDs(ids)
