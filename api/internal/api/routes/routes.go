@@ -20,6 +20,7 @@ func Init(db *gorm.DB, apiConfig *config.ApiConfig) *gin.Engine {
 
 	gin.SetMode(apiConfig.Router.ReleaseMode)
 	router := gin.New()
+	router.MaxMultipartMemory = 500 << 20 // 500 MB
 
 	// Recover middleware recovers from any panics and writes a 500 if there was one.
 	router.Use(gin.Recovery())

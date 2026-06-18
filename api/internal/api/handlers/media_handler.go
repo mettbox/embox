@@ -110,6 +110,14 @@ func (h *MediaHandler) UploadMedia(c *gin.Context) {
 		return
 	}
 
+	const maxFileSize = 500 << 20 // 500 MB
+	for _, f := range files {
+		if f.Size > maxFileSize {
+			response.JSONError(c, http.StatusRequestEntityTooLarge, "File too large", "maximum file size is 500 MB")
+			return
+		}
+	}
+
 	metaJson := c.PostForm("meta")
 	var metaList []dto.MediaUploadRequestDto
 	if err := json.Unmarshal([]byte(metaJson), &metaList); err != nil {
