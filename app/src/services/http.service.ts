@@ -223,7 +223,10 @@ export const httpService = async (
 
           if (refreshResponse.ok) {
             console.log('Session refreshed successfully, retrying request...');
-            const retryResponse = await fetch(url, config);
+            const freshHeaders = isFormData
+              ? { ...options.headers, ...(csrfToken ? { 'X-XSRF-TOKEN': csrfToken } : {}) }
+              : getHeaders(csrfToken, options);
+            const retryResponse = await fetch(url, { ...config, headers: freshHeaders });
             if (!retryResponse.ok) {
               throw new HttpError(retryResponse.statusText, retryResponse.status);
             }
