@@ -12,7 +12,7 @@ type User struct {
 	Name           string    `gorm:"type:varchar(48);null"`
 	Email          string    `gorm:"type:varchar(128);not null;unique"`
 	IsAdmin        bool      `gorm:"default:false"`
-	Token          string    `gorm:"type:varchar(80);null"`
+	Token          string    `gorm:"type:varchar(80);null;index"`
 	TokenCreatedAt time.Time `gorm:"default:null"`
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
