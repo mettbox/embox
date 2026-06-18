@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type userRepository struct {
@@ -41,33 +42,30 @@ func (r *userRepository) GetByEmail(email string) (*models.User, error) {
 
 func (r *userRepository) GetByToken(token string, validDuration time.Duration) (*models.User, error) {
 	var user models.User
-	if err := r.db.Where("token = ?", token).First(&user).Error; err != nil {
-		return nil, err
-	}
-
-	// Check if the token is expired
-	if time.Since(user.TokenCreatedAt) > validDuration {
-		if err := r.removeToken(&user); err != nil {
-			return nil, err
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("token = ?", token).
+			First(&user).Error; err != nil {
+			return err
 		}
 
-		return nil, errors.New("token expired")
-	}
+		if err := tx.Exec(
+			"UPDATE users SET token = NULL, token_created_at = NULL WHERE id = ?",
+			user.ID,
+		).Error; err != nil {
+			return err
+		}
 
-	if err := r.removeToken(&user); err != nil {
+		if time.Since(user.TokenCreatedAt) > validDuration {
+			return errors.New("token expired")
+		}
+
+		return nil
+	})
+	if err != nil {
 		return nil, err
 	}
-
 	return &user, nil
-}
-
-func (r *userRepository) removeToken(user *models.User) error {
-	user.Token = ""
-	user.TokenCreatedAt = time.Time{}
-	if err := r.db.Save(&user).Error; err != nil {
-		return err
-	}
-	return nil
 }
 
 func (r *userRepository) GetAll() ([]*models.User, error) {
