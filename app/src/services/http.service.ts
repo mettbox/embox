@@ -204,7 +204,10 @@ export const httpService = async (
       if (response.status === 419) {
         console.warn('CSRF token mismatch, refreshing token and retrying request...');
         await fetchCsrfToken();
-        headers['X-XSRF-TOKEN'] = csrfToken!;
+        if (!csrfToken) {
+          throw new HttpError('Failed to refresh CSRF token', 500);
+        }
+        headers['X-XSRF-TOKEN'] = csrfToken;
         const retryResponse = await fetch(url, { ...config, headers });
         if (!retryResponse.ok) {
           throw new HttpError(retryResponse.statusText, retryResponse.status);
