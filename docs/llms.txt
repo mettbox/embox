@@ -178,6 +178,8 @@ type Media struct {
 // Remote path: yyyy/mm/dd_ID.FileExt  (LuckyCloud originals)
 ```
 
+> **Data decision (2026-06-18):** `Media.UserID` and `Album.UserID` use `ON DELETE SET NULL` by design. Deleting a user leaves their media and albums intact but without an owner. Content is preserved after user deletion rather than cascade-deleted.
+
 ### Album (`albums` table)
 ```go
 type Album struct {
@@ -199,7 +201,7 @@ type AlbumMedia struct {
 }
 ```
 
-> **Note:** GORM doesn't handle cascading deletes in many-to-many correctly. The `fk_albums_album_media` constraint must be manually altered to `ON DELETE CASCADE` in the DB after migration.
+> **Note:** GORM doesn't handle cascading deletes in many-to-many correctly. `InitDatabase()` automatically fixes the `fk_albums_album_media` constraint to `ON DELETE CASCADE` on every startup via raw SQL (DROP IF EXISTS + ADD CONSTRAINT).
 
 ### Favourite (`favourites` table)
 ```go
@@ -268,6 +270,10 @@ components/
 ## Configuration
 
 Environment variables are loaded via `godotenv` from `api/.env` (copy from `api/.env.example`).
+
+> **Security decision (2026-06-18):** The JWT and CSRF secrets (`AUTH_ACCESS_JWT_SECRET`, `AUTH_REFRESH_JWT_SECRET`, `CSRF_SECRET`) retain their default fallback values in code. It is the developer's responsibility to set strong secrets in the production `.env` file. No fail-fast enforcement at startup is implemented by design.
+
+> **UX decision (2026-06-18):** Raw API error messages are displayed verbatim in the UI (`http.service.ts`). EmBox is an internal family application with a known user base — not a public product. Readable error messages aid diagnosis without the overhead of a frontend error-mapping layer. Do not add user-friendly error mapping unless this changes.
 
 Key variable groups:
 - **Database**: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`

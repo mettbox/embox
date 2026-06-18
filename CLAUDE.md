@@ -35,15 +35,6 @@ The local `api/media/` directory contains only WebP thumbnails. Original files l
 
 ## Known Gotchas
 
-**GORM cascade delete (album_media):** GORM does not correctly apply `ON DELETE CASCADE` for many-to-many relations. After migrations, the FK must be manually fixed in the DB:
-
-```sql
-ALTER TABLE album_media DROP FOREIGN KEY fk_albums_album_media;
-ALTER TABLE album_media
-ADD CONSTRAINT fk_albums_album_media
-FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE CASCADE;
-```
-
 **Port:** API runs on port `2705` by default.
 
 **Thumbnails vs. originals:** Thumbnails are stored locally as WebP in `api/media/yyyy/mm/`. Original files (any format) are streamed directly from LuckyCloud. Never confuse local paths (`Path()`) with remote paths (`RemotePath()`) in the Media model.

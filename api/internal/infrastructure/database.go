@@ -41,6 +41,15 @@ func InitDatabase(config *config.DbConfig) (*gorm.DB, error) {
 		return nil, err
 	}
 
+	// GORM does not correctly apply ON DELETE CASCADE for many-to-many FKs.
+	// IF EXISTS makes the DROP a no-op on a fresh DB where the constraint doesn't exist yet.
+	if err = db.Exec(`ALTER TABLE album_media DROP FOREIGN KEY IF EXISTS fk_albums_album_media`).Error; err != nil {
+		return nil, fmt.Errorf("failed to reset album_media FK: %w", err)
+	}
+	if err = db.Exec(`ALTER TABLE album_media ADD CONSTRAINT fk_albums_album_media FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE CASCADE`).Error; err != nil {
+		return nil, fmt.Errorf("failed to add album_media cascade FK: %w", err)
+	}
+
 	var count int64
 	db.Model(&models.User{}).Where("email = ?", config.DBSystemUser).Count(&count)
 	if count == 0 {
