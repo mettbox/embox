@@ -53,8 +53,8 @@ export const useAppStore = defineStore('app', {
     },
 
     loadAppearance() {
-      const mode = localStorage.getItem('appearance') as 'dark' | 'light' | 'system' | null;
-      if (mode) {
+      const mode = localStorage.getItem('appearance');
+      if (mode === 'dark' || mode === 'light' || mode === 'system') {
         this.setAppearance(mode);
       } else {
         this.initDarkMode();
