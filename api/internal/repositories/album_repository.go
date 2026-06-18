@@ -26,11 +26,7 @@ func (r *albumRepository) Get() ([]*AlbumListItem, error) {
 	var albums []*AlbumListItem
 
 	err := r.db.
-		Preload("Media").
 		Preload("AlbumMedia.Media").
-		Preload("AlbumMedia", func(db *gorm.DB) *gorm.DB {
-			return db.Where("album_media.media_id = (SELECT media_id FROM album_media am WHERE am.album_id = album_media.album_id ORDER BY is_cover DESC, media_id ASC LIMIT 1)")
-		}).
 		Select(`
         albums.*,
         (
@@ -57,12 +53,11 @@ func (r *albumRepository) GetById(id uint) (*models.Album, error) {
 		var album models.Album
 
 		err := r.db.
-			Preload("Media").
-			Preload("AlbumMedia.Media").
 			Preload("AlbumMedia", func(db *gorm.DB) *gorm.DB {
 				return db.Joins("JOIN media ON media.id = album_media.media_id").
 					Order("media.date DESC")
 			}).
+			Preload("AlbumMedia.Media").
 			First(&album, id).Error
 
 		if err != nil {

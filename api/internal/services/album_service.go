@@ -96,17 +96,16 @@ func (s *AlbumService) GetAlbumList(userEmail string) ([]dto.AlbumResponseDto, e
 	var result []dto.AlbumResponseDto
 	for _, album := range albums {
 		var mediaDtos []dto.AlbumMediaResponseDto
-		for _, albumMedia := range album.AlbumMedia {
-			mediaDto := dto.AlbumMediaResponseDto{
-				Id:          albumMedia.MediaID,
-				IsFavourite: albumMedia.Media.IsFavourite,
-				Caption:     albumMedia.Media.Caption,
-				Date:        albumMedia.Media.Date.Format(time.RFC3339),
-				Type:        albumMedia.Media.Type,
-				IsCover:     albumMedia.IsCover,
-				CreatedAt:   albumMedia.Media.CreatedAt,
-			}
-			mediaDtos = append(mediaDtos, mediaDto)
+		if cover := pickCover(album.AlbumMedia); cover != nil {
+			mediaDtos = []dto.AlbumMediaResponseDto{{
+				Id:          cover.MediaID,
+				IsFavourite: cover.Media.IsFavourite,
+				Caption:     cover.Media.Caption,
+				Date:        cover.Media.Date.Format(time.RFC3339),
+				Type:        cover.Media.Type,
+				IsCover:     cover.IsCover,
+				CreatedAt:   cover.Media.CreatedAt,
+			}}
 		}
 
 		albumDto := dto.AlbumResponseDto{
@@ -189,6 +188,19 @@ func (s *AlbumService) RemoveMediaFromAlbum(albumId uint, mediaIds []uint) error
 
 func (s *AlbumService) SetCover(albumId uint, mediaId uint) error {
 	return s.albumRepo.SetCover(albumId, mediaId)
+}
+
+func pickCover(entries []models.AlbumMedia) *models.AlbumMedia {
+	var fallback *models.AlbumMedia
+	for i := range entries {
+		if entries[i].IsCover {
+			return &entries[i]
+		}
+		if fallback == nil || entries[i].MediaID < fallback.MediaID {
+			fallback = &entries[i]
+		}
+	}
+	return fallback
 }
 
 func (s *AlbumService) IsOwner(userEmail string, albumID uint) (bool, error) {
