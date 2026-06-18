@@ -20,7 +20,7 @@ export const routeGuard = async (
   try {
     await me.init();
   } catch (error) {
-    return next();
+    return next('/login');
   }
 
   const isLoggedIn = me.isLoggedIn;
