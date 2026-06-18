@@ -28,7 +28,7 @@ func Init(db *gorm.DB, apiConfig *config.ApiConfig) *gin.Engine {
 	router.Use(middleware.LoggingMiddleware(apiConfig.Router))
 	router.Use(middleware.LanguageMiddleware())
 	router.Use(middleware.CORSMiddleware(apiConfig.Server))
-	router.Use(middleware.CSRFMiddleware())
+	router.Use(middleware.CSRFMiddleware(apiConfig.Csrf.Secret))
 	router.Use(middleware.AuthMiddleware(services.Auth))
 
 	// === Public routes ===

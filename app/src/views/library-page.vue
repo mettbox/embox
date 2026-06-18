@@ -135,7 +135,7 @@ import {
   createGesture,
 } from '@ionic/vue';
 import { addCircleOutline } from 'ionicons/icons';
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAppStore } from '@/stores/app.store';
 import { useMeStore } from '@/stores/me.store';

@@ -47,23 +47,6 @@ const authEndpoint = 'auth/refresh';
 let csrfToken: string | null = null;
 
 /**
- * Get cookie by name
- *
- * @param {string} name
- * @returns {string | null}
- */
-const getCookie = (name: string): string | null => {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-
-  if (parts.length === 2) {
-    return parts.pop()?.split(';').shift() || null;
-  }
-
-  return null;
-};
-
-/**
  * Fetch CSRF token from the server and store it in csrfToken variable
  *
  * @returns {Promise<void>}
@@ -82,9 +65,9 @@ const fetchCsrfToken = async (): Promise<void> => {
       throw new Error('Failed to fetch CSRF token');
     }
 
-    const cookie = getCookie('XSRF-TOKEN');
-    if (cookie) {
-      csrfToken = decodeURIComponent(cookie);
+    const data = await response.json();
+    if (data?.data?.csrf_token) {
+      csrfToken = data.data.csrf_token;
     } else {
       throw new Error('Failed to fetch CSRF token');
     }
