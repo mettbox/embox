@@ -148,7 +148,20 @@ func (s *MediaService) CreateFromRequest(meta dto.MediaUploadRequestDto, file io
 		return nil, err
 	}
 
-	bytes, err := io.ReadAll(file)
+	// Detect MIME type from file content and cross-check against the declared type.
+	// If Go cannot identify the type (application/octet-stream), we skip the check.
+	sniff := make([]byte, 512)
+	n, err := io.ReadFull(file, sniff)
+	if err != nil && err != io.ErrUnexpectedEOF && err != io.EOF {
+		return nil, fmt.Errorf("failed to read file: %w", err)
+	}
+	sniff = sniff[:n]
+	detectedMime := http.DetectContentType(sniff)
+	if detectedMime != "application/octet-stream" && getMediaType(detectedMime) != getMediaType(meta.Type) {
+		return nil, fmt.Errorf("file type mismatch: declared %q but detected %q", meta.Type, detectedMime)
+	}
+
+	bytes, err := io.ReadAll(io.MultiReader(bytes.NewReader(sniff), file))
 	if err != nil {
 		return nil, err
 	}
