@@ -2,12 +2,14 @@ package services
 
 import (
 	"bytes"
+	"context"
 	"embox/internal/api/dto"
 	"embox/internal/models"
 	"embox/internal/repositories"
 	"fmt"
 	"image"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -32,6 +34,9 @@ var imgMaxSize = 512
 var imgQuality float32 = 80
 
 func NewMediaService(storage *StorageService, mediaRepo repositories.MediaRepository, userRepo repositories.UserRepository) *MediaService {
+	if _, err := exec.LookPath("ffmpeg"); err != nil {
+		log.Fatal("ffmpeg not found in PATH")
+	}
 	return &MediaService{storage, mediaRepo, userRepo}
 }
 
@@ -387,7 +392,9 @@ func (s *MediaService) generateVideoPoster(media *models.Media, videoData []byte
 	defer os.Remove(tmpFile)
 
 	tmpPoster := tmpFile + "_poster.png"
-	cmd := exec.Command("ffmpeg",
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "ffmpeg",
 		"-i", tmpFile,
 		"-vf", fmt.Sprintf("scale='min(%d,iw)':-2", imgMaxSize),
 		"-vframes", "1",
