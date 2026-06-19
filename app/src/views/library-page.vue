@@ -279,18 +279,18 @@ const updateVisibleRange = () => {
   const firstDate = new Date(visibleDates[0]);
   const lastDate = new Date(visibleDates[visibleDates.length - 1]);
 
-  const formatter = new Intl.DateTimeFormat('de-DE', {
-    month: 'short',
-    year: 'numeric',
-  });
+  const sameMonth =
+    firstDate.getFullYear() === lastDate.getFullYear() && firstDate.getMonth() === lastDate.getMonth();
 
-  const firstLabel = formatter.format(firstDate);
-  const lastLabel = formatter.format(lastDate);
-
-  visibleRange.value =
-    firstDate.getFullYear() === lastDate.getFullYear() && firstDate.getMonth() === lastDate.getMonth()
-      ? firstLabel
-      : `${firstLabel} – ${lastLabel}`;
+  if (sameMonth) {
+    const monthYear = new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric' }).format(firstDate);
+    const firstDay = firstDate.getDate();
+    const lastDay = lastDate.getDate();
+    visibleRange.value = firstDay === lastDay ? `${firstDay}. ${monthYear}` : `${firstDay}. – ${lastDay}. ${monthYear}`;
+  } else {
+    const formatter = new Intl.DateTimeFormat('de-DE', { month: 'short', year: 'numeric' });
+    visibleRange.value = `${formatter.format(firstDate)} – ${formatter.format(lastDate)}`;
+  }
 };
 
 const openUploadModal = () => {
