@@ -182,10 +182,16 @@ export const httpService = async (
     // Handle blob responses
     if (options.responseType === 'blob') {
       if (!response.ok) {
-        // TODO
         throw new HttpError(response.statusText, response.status);
       }
-      return await response.blob();
+      // Reset the timeout so the body read gets its own full window independent of connection time.
+      clearTimeout(timeoutId);
+      const blobTimeoutId = setTimeout(() => controller.abort(), timeout);
+      try {
+        return await response.blob();
+      } finally {
+        clearTimeout(blobTimeoutId);
+      }
     }
 
     // Handle successful responses w/o content
