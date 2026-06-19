@@ -11,16 +11,18 @@ docker compose up -d   # start database
 docker compose down    # stop database
 ```
 
-## Verification (no tests yet)
+## Verification
 
-Until a test suite exists, verify changes with:
-
-| Area     | Command                                           |
-|----------|---------------------------------------------------|
-| Backend  | `cd api && go build ./...` and `go vet ./...`     |
-| Frontend | `cd app && npm run lint` and `npm run build`      |
+| Area          | Command                                                        |
+|---------------|----------------------------------------------------------------|
+| Backend build | `cd api && go build ./...` and `go vet ./...`                  |
+| Integration   | `cd api && go test ./internal/tests/... -v -count=1`           |
+| Frontend      | `cd app && npm run lint` and `npm run build`                   |
 
 Run the relevant check after every non-trivial change.
+
+> Integration tests require `ffmpeg` in PATH and run against SQLite in-memory — no Docker needed.
+> Tests are skipped gracefully when `ffmpeg` is not available.
 
 ## Deployment
 
