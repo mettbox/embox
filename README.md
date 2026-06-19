@@ -125,3 +125,11 @@ kill <PID>
 ```sh
 npm run build
 ```
+
+### Test Suite
+
+```sh
+cd api && go test ./internal/tests/... -v -count=1
+```
+
+The tests run against SQLite in-memory, so Docker is not required. They need ffmpeg in the PATH; without ffmpeg, the relevant tests are skipped automatically.

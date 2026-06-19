@@ -84,7 +84,12 @@ func (r *albumRepository) GetMediaIdsByAlbumId(albumId uint) ([]uint, error) {
 }
 
 func (r *albumRepository) Delete(id uint) error {
-	return r.db.Delete(&models.Album{}, id).Error
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("album_id = ?", id).Delete(&models.AlbumMedia{}).Error; err != nil {
+			return err
+		}
+		return tx.Delete(&models.Album{}, id).Error
+	})
 }
 
 func (r *albumRepository) AddMediaToAlbum(albumId uint, mediaIds []uint, isCover bool) error {

@@ -51,6 +51,12 @@ func getLimiter(ip string, r rate.Limit, b int) *rate.Limiter {
 	return c.limiter
 }
 
+func ResetRateLimiter() {
+	mu.Lock()
+	clients = make(map[string]*rateLimitClient)
+	mu.Unlock()
+}
+
 func RateLimitMiddleware(maxRequests int, duration time.Duration) gin.HandlerFunc {
 	startCleanup()
 	return func(c *gin.Context) {

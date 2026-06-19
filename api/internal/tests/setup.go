@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"testing"
 
+	"embox/internal/api/middleware"
 	"embox/internal/api/routes"
 	"embox/internal/config"
 	"embox/internal/models"
@@ -25,6 +26,8 @@ func SetupTestApp(t *testing.T) (*httptest.Server, *gorm.DB, *config.ApiConfig, 
 	if _, err := exec.LookPath("ffmpeg"); err != nil {
 		t.Skip("ffmpeg not found in PATH — skipping integration tests")
 	}
+
+	middleware.ResetRateLimiter()
 
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
@@ -54,11 +57,12 @@ func SetupTestApp(t *testing.T) (*httptest.Server, *gorm.DB, *config.ApiConfig, 
 		Server: &config.ServerConfig{
 			Host:        "localhost",
 			Domain:      "localhost",
-			CorsOrigins: []string{},
+			CorsOrigins: []string{"http://localhost"},
 		},
 		Router: &config.RouterConfig{
 			ReleaseMode: "test",
 			LogOutput:   "stdout",
+			RateLimit:   10,
 		},
 		Csrf: &config.CsrfConfig{
 			Secret:   testCSRFSecret,

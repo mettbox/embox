@@ -2,7 +2,7 @@
 
 > Full project context: see [docs/llms.txt](docs/llms.txt)
 
-## Docker is not available in this environment
+## Tools not available in this environment
 
 Claude cannot execute `docker` or `docker compose` commands. When database operations are needed, output the commands for the user to run locally:
 
@@ -10,6 +10,8 @@ Claude cannot execute `docker` or `docker compose` commands. When database opera
 docker compose up -d   # start database
 docker compose down    # stop database
 ```
+
+Claude does not have `ffmpeg` in PATH. Integration tests that exercise media processing must be run locally by the user. Claude can write and verify the test code, but cannot execute the full test suite — only the user can confirm green tests locally.
 
 ## Verification
 
