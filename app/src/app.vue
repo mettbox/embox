@@ -45,13 +45,8 @@ onMounted(async () => {
 
   window.addEventListener('resize', app.updateBreakpoint);
 
-  window.addEventListener('online', () => {
-    app.unsetNotification();
-  });
-
-  window.addEventListener('offline', () => {
-    app.setNotification(t('No Internet Connection'), new HttpError('Offline', 0));
-  });
+  window.addEventListener('online', onlineHandler);
+  window.addEventListener('offline', offlineHandler);
 });
 
 // Clean up event listeners when the component is hot-reloaded during development

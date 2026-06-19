@@ -130,6 +130,7 @@ import {
   IonButton,
   onIonViewDidEnter,
   onIonViewWillEnter,
+  onIonViewWillLeave,
   IonItem,
   IonLabel,
   createGesture,
@@ -573,12 +574,17 @@ const onShowNextMedia = (id: number) => {
   }
 };
 
+let gesture: ReturnType<typeof createGesture> | null = null;
+let preventNative: ((e: Event) => void) | null = null;
+let gestureContentEl: HTMLElement | null = null;
+
 const initGestures = () => {
   if (!contentRef.value) return;
 
   const contentEl = contentRef.value.$el;
+  gestureContentEl = contentEl;
 
-  const gesture = createGesture({
+  gesture = createGesture({
     el: contentEl,
     gestureName: 'pinch-zoom',
     priority: 110, // Higher priority
@@ -675,7 +681,7 @@ const initGestures = () => {
 
   gesture.enable(true);
 
-  const preventNative = (e: any) => {
+  preventNative = (e: any) => {
     if (e.touches && e.touches.length > 1) {
       if (e.cancelable) e.preventDefault();
     }
@@ -695,6 +701,19 @@ onIonViewWillEnter(() => {
 onIonViewDidEnter(async () => {
   await load();
   initGestures();
+});
+
+onIonViewWillLeave(() => {
+  gesture?.destroy();
+  gesture = null;
+  if (gestureContentEl && preventNative) {
+    document.removeEventListener('gesturestart', preventNative);
+    document.removeEventListener('gesturechange', preventNative);
+    document.removeEventListener('gestureend', preventNative);
+    gestureContentEl.removeEventListener('touchmove', preventNative);
+  }
+  preventNative = null;
+  gestureContentEl = null;
 });
 </script>
 

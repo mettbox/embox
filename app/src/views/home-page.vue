@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { IonContent, IonPage } from '@ionic/vue';
 import vFitToWidth from '@/components/v-fit-to-width.vue';
@@ -46,8 +46,16 @@ const updateTimes = (): void => {
   ];
 };
 
-updateTimes();
-setInterval(updateTimes, 1000);
+let intervalId: ReturnType<typeof setInterval>;
+
+onMounted(() => {
+  updateTimes();
+  intervalId = setInterval(updateTimes, 1000);
+});
+
+onUnmounted(() => {
+  clearInterval(intervalId);
+});
 </script>
 
 <style>
