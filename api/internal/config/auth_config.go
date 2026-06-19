@@ -2,7 +2,6 @@ package config
 
 import (
 	"embox/pkg/env"
-	"strings"
 )
 
 type AuthConfig struct {
@@ -17,9 +16,7 @@ type AuthConfig struct {
 	LoginEmailTemplate   string
 }
 
-func LoadAuthConfig(domain string) *AuthConfig {
-	isSecure := strings.HasPrefix(domain, "https")
-
+func LoadAuthConfig(domain string, isSecure bool) *AuthConfig {
 	return &AuthConfig{
 		Domain:               domain,
 		AccessExpiration:     env.GetEnvAsInt("AUTH_ACCESS_COOKIE_EXPIRATION", 60*60),        // 1 hour

@@ -10,6 +10,7 @@ type ServerConfig struct {
 	Host        string
 	Port        string
 	Domain      string
+	IsSecure    bool
 	CorsOrigins []string
 	CorsMaxAge  time.Duration
 }
@@ -26,6 +27,7 @@ func LoadServerConfig() *ServerConfig {
 		Host:        env.GetEnv("SERVER_HOST", "0.0.0.0"),
 		Port:        env.GetEnv("SERVER_PORT", "2705"),
 		Domain:      env.GetEnv("SERVER_DOMAIN", "localhost"),
+		IsSecure:    env.GetEnvAsBool("SERVER_SECURE", false),
 		CorsOrigins: corsOrigins,
 		CorsMaxAge:  time.Duration(maxAgeSeconds) * time.Second,
 	}

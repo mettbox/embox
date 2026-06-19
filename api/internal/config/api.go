@@ -14,8 +14,8 @@ func LoadApiConfig() *ApiConfig {
 	return &ApiConfig{
 		Server:  server,
 		Router:  LoadRouterConfig(),
-		Csrf:    LoadCsrfConfig(server.Domain),
-		Auth:    LoadAuthConfig(server.Domain),
+		Csrf:    LoadCsrfConfig(server.Domain, server.IsSecure),
+		Auth:    LoadAuthConfig(server.Domain, server.IsSecure),
 		Storage: LoadStorageConfig(),
 		Email:   LoadEmailConfig(),
 	}
