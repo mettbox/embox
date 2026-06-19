@@ -9,15 +9,16 @@ import (
 )
 
 type Media struct {
-	ID        uint       `gorm:"type:int;primaryKey"`
-	Date      time.Time  `gorm:"type:datetime;not null"`
-	UserID    *uuid.UUID `gorm:"type:char(36);null"`                             // Foreign Key, nullable
-	User      User       `gorm:"foreignKey:UserID;constraint:OnDelete:SET NULL"` // Relation
-	FileExt   string     `gorm:"type:varchar(8);not null"`
-	Type      string     `gorm:"type:varchar(8);not null"`
-	Caption   string     `gorm:"type:varchar(255);null"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID          uint       `gorm:"type:int;primaryKey"`
+	Date        time.Time  `gorm:"type:datetime;not null"`
+	UserID      *uuid.UUID `gorm:"type:char(36);null"`                             // Foreign Key, nullable
+	User        User       `gorm:"foreignKey:UserID;constraint:OnDelete:SET NULL"` // Relation
+	UpdatedByID *uuid.UUID `gorm:"type:char(36);null"`
+	FileExt     string     `gorm:"type:varchar(8);not null"`
+	Type        string     `gorm:"type:varchar(8);not null"`
+	Caption     string     `gorm:"type:varchar(255);null"`
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 
 	// Computed fields, ignored by GORM for DB operations
 	IsFavourite       bool   `gorm:"-" json:"isFavourite"`

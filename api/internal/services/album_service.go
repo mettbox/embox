@@ -52,7 +52,12 @@ func (s *AlbumService) CreateAlbum(album *dto.CreateAlbumRequestDto, userEmail s
 	return newAlbum, nil
 }
 
-func (s *AlbumService) UpdateAlbum(id uint, album *dto.UpdateAlbumRequestDto) (*dto.AlbumResponseDto, error) {
+func (s *AlbumService) UpdateAlbum(id uint, album *dto.UpdateAlbumRequestDto, userEmail string) (*dto.AlbumResponseDto, error) {
+	user, err := s.userRepo.GetByEmail(userEmail)
+	if err != nil || user == nil {
+		return nil, fmt.Errorf("user not found")
+	}
+
 	existingAlbum, err := s.albumRepo.GetById(id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch album: %w", err)
@@ -64,6 +69,7 @@ func (s *AlbumService) UpdateAlbum(id uint, album *dto.UpdateAlbumRequestDto) (*
 	if album.Description != "" {
 		existingAlbum.Description = album.Description
 	}
+	existingAlbum.UpdatedByID = &user.ID
 
 	if err := s.albumRepo.Update(existingAlbum); err != nil {
 		return nil, fmt.Errorf("failed to update album: %w", err)

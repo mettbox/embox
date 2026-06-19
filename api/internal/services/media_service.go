@@ -259,6 +259,8 @@ func (s *MediaService) UpdateMediaBatch(updates []dto.MediaUpdateRequestDto, use
 			continue
 		}
 
+		existingMedia.UpdatedByID = &user.ID
+
 		if update.Caption != nil {
 			existingMedia.Caption = *update.Caption
 		}

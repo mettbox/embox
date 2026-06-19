@@ -12,6 +12,7 @@ type Album struct {
 	Description string     `gorm:"type:text;null"`
 	UserID      *uuid.UUID `gorm:"type:char(36);null"`                             // Foreign Key, nullable
 	User        User       `gorm:"foreignKey:UserID;constraint:OnDelete:SET NULL"` // Relation
+	UpdatedByID *uuid.UUID `gorm:"type:char(36);null"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 
