@@ -3,6 +3,7 @@ package services
 import (
 	"embox/internal/config"
 	"embox/internal/repositories"
+	"log"
 )
 
 type Services struct {
@@ -17,7 +18,13 @@ type Services struct {
 // Init initializes all services with the provided API configuration and repositories.
 // It sets up the necessary dependencies for each service and returns a Services struct.
 func Init(apiConfig *config.ApiConfig, repos *repositories.Repositories) *Services {
-	storageService := NewStorageService(apiConfig.Storage)
+	var storageService Storage
+	if apiConfig.Storage.Adapter == "local" {
+		log.Println("INFO: Using local storage adapter")
+		storageService = NewLocalStorageAdapter(apiConfig.Storage.LocalDir)
+	} else {
+		storageService = NewStorageService(apiConfig.Storage)
+	}
 	emailService := NewEmailService(apiConfig.Email)
 	userService := NewUserService(repos.User)
 	authService := NewAuthService(apiConfig.Auth, emailService)

@@ -24,7 +24,7 @@ import (
 )
 
 type MediaService struct {
-	storage   *StorageService
+	storage   Storage
 	mediaRepo repositories.MediaRepository
 	userRepo  repositories.UserRepository
 }
@@ -33,7 +33,7 @@ var MediaDir = "./media"
 var imgMaxSize = 512
 var imgQuality float32 = 80
 
-func NewMediaService(storage *StorageService, mediaRepo repositories.MediaRepository, userRepo repositories.UserRepository) *MediaService {
+func NewMediaService(storage Storage, mediaRepo repositories.MediaRepository, userRepo repositories.UserRepository) *MediaService {
 	if _, err := exec.LookPath("ffmpeg"); err != nil {
 		log.Fatal("ffmpeg not found in PATH")
 	}
