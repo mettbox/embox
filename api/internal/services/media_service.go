@@ -392,6 +392,7 @@ func (s *MediaService) generateVideoPoster(media *models.Media, videoData []byte
 	defer os.Remove(tmpFile)
 
 	tmpPoster := tmpFile + "_poster.png"
+	defer os.Remove(tmpPoster)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "ffmpeg",
@@ -403,7 +404,6 @@ func (s *MediaService) generateVideoPoster(media *models.Media, videoData []byte
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("failed to extract video poster: %w", err)
 	}
-	defer os.Remove(tmpPoster)
 
 	posterData, err := os.ReadFile(tmpPoster)
 	if err != nil {
