@@ -10,6 +10,7 @@ import (
 	"image"
 	"io"
 	"log"
+	"log/slog"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -331,7 +332,7 @@ func (s *MediaService) DeleteMedia(ids []uint) error {
 		_ = os.Remove(localFilePath)
 
 		if err := s.storage.Delete(media.RemotePath()); err != nil {
-			fmt.Printf("Failed to delete remote file %s: %v\n", media.RemotePath(), err)
+			slog.Error("failed to delete remote file", "path", media.RemotePath(), "err", err)
 		}
 	}
 

@@ -4,7 +4,7 @@ import (
 	"embox/internal/api/dto"
 	"embox/internal/api/response"
 	"embox/internal/services"
-	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -37,7 +37,7 @@ func (h *AuthHandler) GenerateToken(c *gin.Context) {
 	}
 
 	if err := h.authService.SendLoginTokenEmail(c, user.Email, user.Name, user.Token); err != nil {
-		fmt.Printf("Error sending email: %v", err)
+		slog.Error("failed to send login email", "err", err)
 		response.JSONError(c, http.StatusInternalServerError, "Failed to send email", err.Error())
 		return
 	}

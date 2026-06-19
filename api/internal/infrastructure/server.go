@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -27,9 +28,9 @@ func InitServer(db *gorm.DB, apiConfig *config.ApiConfig) {
 	}
 
 	go func() {
-		fmt.Println("🚀 Server running on", server.Addr)
+		slog.Info("server started", "addr", server.Addr)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			fmt.Println("Server error:", err)
+			slog.Error("server error", "err", err)
 		}
 	}()
 
@@ -38,15 +39,15 @@ func InitServer(db *gorm.DB, apiConfig *config.ApiConfig) {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	fmt.Println("🛑 Shutting down server...")
+	slog.Info("shutting down")
 
 	// Create a context with timeout for graceful shutdown
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
-		fmt.Println("❌ Error during shutdown:", err)
+		slog.Error("shutdown error", "err", err)
 	}
 
-	fmt.Println("✅ Server shut down cleanly.")
+	slog.Info("server stopped")
 }

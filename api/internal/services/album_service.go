@@ -5,6 +5,7 @@ import (
 	"embox/internal/models"
 	"embox/internal/repositories"
 	"fmt"
+	"log/slog"
 	"time"
 )
 
@@ -95,7 +96,7 @@ func (s *AlbumService) GetAlbumList(userEmail string) ([]dto.AlbumResponseDto, e
 
 	albums, err := s.albumRepo.Get()
 	if err != nil {
-		fmt.Printf("Error fetching albums: %v\n", err)
+		slog.Error("failed to fetch albums", "err", err)
 		return nil, err
 	}
 
@@ -130,7 +131,7 @@ func (s *AlbumService) GetAlbumList(userEmail string) ([]dto.AlbumResponseDto, e
 func (s *AlbumService) GetAlbumByID(id uint) (*dto.AlbumResponseDto, error) {
 	album, err := s.albumRepo.GetById(id)
 	if err != nil {
-		fmt.Printf("Error fetching album by ID: %v\n", err)
+		slog.Error("failed to fetch album", "id", id, "err", err)
 		return nil, err
 	}
 

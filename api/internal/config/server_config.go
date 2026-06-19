@@ -2,7 +2,7 @@ package config
 
 import (
 	"embox/pkg/env"
-	"log"
+	"log/slog"
 	"time"
 )
 
@@ -19,7 +19,7 @@ func LoadServerConfig() *ServerConfig {
 
 	corsOrigins := env.GetEnvSlice("SERVER_CORS_ORIGINS", []string{})
 	if len(corsOrigins) == 0 {
-		log.Println("WARNING: SERVER_CORS_ORIGINS is not set — all cross-origin requests will be rejected")
+		slog.Warn("SERVER_CORS_ORIGINS not set — cross-origin requests will be rejected")
 	}
 
 	return &ServerConfig{

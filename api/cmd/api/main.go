@@ -21,5 +21,6 @@ func main() {
 		sqlDB.Close()
 	}()
 
+	infrastructure.InitLogger(apiConfig.Router.ReleaseMode)
 	infrastructure.InitServer(db, apiConfig)
 }
