@@ -43,14 +43,17 @@ export const useMeStore = defineStore('me', {
      * @returns {Promise<void>}
      */
     async init(): Promise<void> {
-      if (this.isInitialized && this.isAuthenticated) return;
+      if (this.isInitialized) return;
 
-      const { data } = await httpService('auth/refresh', 'post');
       this.isInitialized = true;
-
-      if (data && data.id) {
-        this.user = data;
-        this.isAuthenticated = true;
+      try {
+        const { data } = await httpService('auth/refresh', 'post');
+        if (data && data.id) {
+          this.user = data;
+          this.isAuthenticated = true;
+        }
+      } catch {
+        // Refresh failed — user stays unauthenticated
       }
     },
 
@@ -87,6 +90,7 @@ export const useMeStore = defineStore('me', {
       await httpService('auth/logout', 'post');
       this.user = null;
       this.isAuthenticated = false;
+      this.isInitialized = false;
       router.replace({ name: 'login' });
     },
 
@@ -114,6 +118,7 @@ export const useMeStore = defineStore('me', {
       await httpService(`user/${this.user.id}`, 'delete');
       this.user = null;
       this.isAuthenticated = false;
+      this.isInitialized = false;
       router.replace({ name: 'login' });
     },
   },

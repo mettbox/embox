@@ -20,6 +20,7 @@ export const routeGuard = async (
   try {
     await me.init();
   } catch (error) {
+    if (isLoginPath) return next();
     return next('/login');
   }
 
