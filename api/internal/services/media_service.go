@@ -378,11 +378,7 @@ func (s *MediaService) saveMediaFile(media *models.Media, data []byte) error {
 
 // getFileExt extracts the file extension from the given file name.
 func getFileExt(fileName string) string {
-	parts := strings.Split(fileName, ".")
-	if len(parts) > 1 {
-		return parts[len(parts)-1]
-	}
-	return ""
+	return strings.TrimPrefix(filepath.Ext(fileName), ".")
 }
 
 // generateVideoPoster extracts a poster image from the video and converts it to WebP format.

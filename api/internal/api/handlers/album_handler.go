@@ -100,6 +100,12 @@ func (h *AlbumHandler) UpdateAlbum(c *gin.Context) {
 		return
 	}
 
+	userEmail, ok := GetContextUserEmail(c)
+	if !ok {
+		response.JSONError(c, http.StatusUnauthorized, "Unauthorized", "")
+		return
+	}
+
 	if !h.assertOwner(c, uint(id)) {
 		return
 	}
@@ -110,7 +116,7 @@ func (h *AlbumHandler) UpdateAlbum(c *gin.Context) {
 		return
 	}
 
-	album, err := h.albumService.UpdateAlbum(uint(id), &albumRequest)
+	album, err := h.albumService.UpdateAlbum(uint(id), &albumRequest, userEmail)
 	if err != nil {
 		response.JSONError(c, http.StatusInternalServerError, "Failed to update album", err.Error())
 		return
