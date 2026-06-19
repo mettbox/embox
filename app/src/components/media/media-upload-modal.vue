@@ -274,6 +274,7 @@ const triggerUploadInput = () => {
 };
 
 const onCancel = async () => {
+  uploadStore.files.forEach((f) => URL.revokeObjectURL(f.file));
   uploadStore.clearFiles();
   isUploading.value = false;
   if (inputRef.value) {
@@ -286,6 +287,7 @@ const onCancel = async () => {
 };
 
 const onRemove = (index: number) => {
+  URL.revokeObjectURL(uploadStore.files[index].file);
   uploadStore.files.splice(index, 1);
 };
 
