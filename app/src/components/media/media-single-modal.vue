@@ -56,7 +56,7 @@
           :key="'video-' + media.id"
           :src="fileUrl"
           controls
-          :poster="media.thumbUrl"
+          :poster="getThumbnailUrl(media.id)"
           @loadeddata="onMediaLoaded"
         />
         <audio
@@ -195,7 +195,7 @@ const localizedDate = computed(() => {
 const captionLines = computed(() => (props.media?.caption ?? '').split('\n'));
 
 const me = useMeStore();
-const { getFileUrl } = useThumbnail();
+const { getFileUrl, getThumbnailUrl } = useThumbnail();
 
 const modalRef = ref<InstanceType<typeof IonModal> | null>(null);
 const mediaWrapperRef = ref<HTMLElement | null>(null);
@@ -212,6 +212,8 @@ const imgRef = ref<HTMLImageElement | null>(null);
 const imgNaturalWidth = ref(1920);
 const imgNaturalHeight = ref(1080);
 const isZoomReady = ref(false);
+const originalAbortController = ref<AbortController | null>(null);
+const blobUrl = ref<string | null>(null);
 
 const onMediaLoaded = () => {
   isMediaLoaded.value = true;
@@ -219,30 +221,63 @@ const onMediaLoaded = () => {
   imgNaturalHeight.value = imgRef.value?.naturalHeight || 1080;
 };
 
-/**
- * Preloads a media URL into the browser cache.
- */
 const preloadMedia = (url: string | null) => {
   if (!url) return;
   const img = new Image();
   img.src = url;
 };
 
+const cleanupOriginal = () => {
+  originalAbortController.value?.abort();
+  originalAbortController.value = null;
+  if (blobUrl.value) {
+    URL.revokeObjectURL(blobUrl.value);
+    blobUrl.value = null;
+  }
+};
+
+const loadOriginal = async (mediaId: number) => {
+  const controller = new AbortController();
+  originalAbortController.value = controller;
+
+  try {
+    const response = await fetch(getFileUrl(mediaId), {
+      credentials: 'include',
+      signal: controller.signal,
+    });
+    if (!response.ok || controller.signal.aborted) return;
+
+    const blob = await response.blob();
+    if (controller.signal.aborted) return;
+
+    const newBlobUrl = URL.createObjectURL(blob);
+    blobUrl.value = newBlobUrl;
+    fileUrl.value = newBlobUrl;
+  } catch (err) {
+    if (err instanceof Error && err.name !== 'AbortError') {
+      // thumbnail stays visible
+    }
+  }
+};
+
 watch(
   () => props.media,
   (newMedia, oldMedia) => {
-    // Only reset if it's actually a different media file
     if (newMedia?.id === oldMedia?.id && fileUrl.value) return;
 
+    cleanupOriginal();
     isMediaLoaded.value = false;
     if (!newMedia) return;
-    fileUrl.value = getFileUrl(newMedia.id);
 
-    // Set URLs for transitions
-    prevFileUrl.value = props.prevMediaId ? getFileUrl(props.prevMediaId) : null;
-    nextFileUrl.value = props.nextMediaId ? getFileUrl(props.nextMediaId) : null;
+    if (newMedia.type === 'image') {
+      fileUrl.value = getThumbnailUrl(newMedia.id);
+      loadOriginal(newMedia.id);
+    } else {
+      fileUrl.value = getFileUrl(newMedia.id);
+    }
 
-    // Actively preload adjacent items
+    prevFileUrl.value = props.prevMediaId ? getThumbnailUrl(props.prevMediaId) : null;
+    nextFileUrl.value = props.nextMediaId ? getThumbnailUrl(props.nextMediaId) : null;
     preloadMedia(prevFileUrl.value);
     preloadMedia(nextFileUrl.value);
   },
@@ -250,6 +285,7 @@ watch(
 );
 
 const onClose = () => {
+  cleanupOriginal();
   fileUrl.value = undefined;
   setZoomMode(false);
   if (modalRef.value) {
@@ -344,6 +380,7 @@ onUnmounted(() => {
   if (gesture.value) {
     gesture.value.destroy();
   }
+  cleanupOriginal();
 });
 </script>
 
