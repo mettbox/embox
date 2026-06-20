@@ -104,7 +104,6 @@ const onClose = () => {
 };
 
 const onSave = () => {
-  console.log(items.value);
   const updates = items.value.map((item) => ({
     id: item.id,
     caption: item.caption,

@@ -280,8 +280,7 @@ const updateVisibleRange = () => {
   const firstDate = new Date(visibleDates[0]);
   const lastDate = new Date(visibleDates[visibleDates.length - 1]);
 
-  const sameMonth =
-    firstDate.getFullYear() === lastDate.getFullYear() && firstDate.getMonth() === lastDate.getMonth();
+  const sameMonth = firstDate.getFullYear() === lastDate.getFullYear() && firstDate.getMonth() === lastDate.getMonth();
 
   if (sameMonth) {
     const monthYear = new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric' }).format(firstDate);

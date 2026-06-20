@@ -1,6 +1,6 @@
 @font-face {
   font-family: 'story';
-  src: url('./../assets/PoorStory-Regular.ttf') format('truetype');
+  src: url('./../assets/PoorStory-Regular.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
 }
