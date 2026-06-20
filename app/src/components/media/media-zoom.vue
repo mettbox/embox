@@ -3,8 +3,8 @@
     <zoompinch
       v-show="props.isOpen && props.fileUrl"
       ref="zoompinchRef"
-      :width="1536"
-      :height="2048"
+      :width="props.naturalWidth || 1920"
+      :height="props.naturalHeight || 1080"
       :offset="{ top: 56, right: 0, bottom: 56, left: 0 }"
       :min-scale="0.5"
       :max-scale="10"
@@ -35,15 +35,20 @@ import { ref } from 'vue';
 const props = defineProps<{
   isOpen: boolean;
   fileUrl: string;
+  naturalWidth?: number;
+  naturalHeight?: number;
+}>();
+
+const emit = defineEmits<{
+  (e: 'ready'): void;
 }>();
 
 const zoompinchRef = ref<InstanceType<typeof Zoompinch>>();
 const transform = ref({ x: 0, y: 0, scale: 1, rotate: 0 });
 
 const onImgDidLoad = () => {
-  if (zoompinchRef.value) {
-    transform.value = { x: 0, y: 0, scale: 1, rotate: 0 };
-  }
+  transform.value = { x: 0, y: 0, scale: 1, rotate: 0 };
+  emit('ready');
 };
 </script>
 
@@ -51,10 +56,5 @@ const onImgDidLoad = () => {
 .projection-wrapper {
   width: 100%;
   height: 100%;
-}
-
-ion-content ion-button[slot='fixed'] {
-  top: var(--ion-padding);
-  right: var(--ion-padding);
 }
 </style>

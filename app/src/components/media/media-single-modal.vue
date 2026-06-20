@@ -10,10 +10,10 @@
     >
       <ion-toolbar color="primary">
         <ion-buttons slot="start">
-          <ion-button @click="media.isFavourite === false ? $emit('favourite:set') : $emit('favourite:unset')">
+          <ion-button @click="!media.isFavourite ? $emit('favourite:set') : $emit('favourite:unset')">
             <ion-icon
               slot="icon-only"
-              :icon="media.isFavourite === false ? heartOutline : heart"
+              :icon="!media.isFavourite ? heartOutline : heart"
             />
           </ion-button>
         </ion-buttons>
@@ -69,7 +69,8 @@
         />
         <img
           v-else-if="media.type === 'image'"
-          :class="{ 'main-media': true, loaded: isMediaLoaded && !isZoomMode }"
+          ref="imgRef"
+          :class="{ 'main-media': true, loaded: isMediaLoaded && !(isZoomMode && isZoomReady) }"
           :key="'img-' + media.id"
           :src="fileUrl"
           :draggable="false"
@@ -80,7 +81,10 @@
           v-if="isZoomMode"
           :is-open="isZoomMode"
           :file-url="fileUrl"
+          :natural-width="imgNaturalWidth"
+          :natural-height="imgNaturalHeight"
           @close="setZoomMode(false)"
+          @ready="isZoomReady = true"
         />
       </div>
       <div
@@ -101,10 +105,10 @@
       >
         <ion-text class="caption">
           <span
-            v-for="(line, index) in media.caption.split('\n')"
+            v-for="(line, index) in captionLines"
             :key="index"
           >
-            {{ line }}<span v-if="index < media.caption.split('\n').length - 1"><br /></span>
+            {{ line }}<span v-if="index < captionLines.length - 1"><br /></span>
           </span>
         </ion-text>
         <ion-buttons slot="end">
@@ -188,6 +192,8 @@ const localizedDate = computed(() => {
   return date.toLocaleDateString('de-DE', { year: 'numeric', month: 'long', day: 'numeric' });
 });
 
+const captionLines = computed(() => (props.media?.caption ?? '').split('\n'));
+
 const me = useMeStore();
 const { getFileUrl } = useThumbnail();
 
@@ -199,12 +205,18 @@ const isZoomMode = ref(false);
 const prevFileUrl = ref<string | null>(null);
 const nextFileUrl = ref<string | null>(null);
 
-const isAdmin = me.isAdmin;
+const isAdmin = computed(() => me.isAdmin);
 
 const isMediaLoaded = ref(false);
+const imgRef = ref<HTMLImageElement | null>(null);
+const imgNaturalWidth = ref(1920);
+const imgNaturalHeight = ref(1080);
+const isZoomReady = ref(false);
 
 const onMediaLoaded = () => {
   isMediaLoaded.value = true;
+  imgNaturalWidth.value = imgRef.value?.naturalWidth || 1920;
+  imgNaturalHeight.value = imgRef.value?.naturalHeight || 1080;
 };
 
 /**
@@ -282,23 +294,29 @@ const initSwipe = async () => {
   const gestureEl =
     modalRef.value?.$el?.querySelector('.modal-wrapper, ion-content') || modalRef.value?.$el || modalRef.value;
 
+  let reEnableTimeout: ReturnType<typeof setTimeout> | null = null;
+
   gesture.value = createGesture({
     el: gestureEl,
     gestureName: 'swipe',
     direction: 'x',
-    threshold: 15, // Slightly higher threshold for better iOS feel
+    threshold: 15,
     onMove(ev) {
+      if (reEnableTimeout !== null) return;
+
       if (ev.deltaX > 60) {
         gesture.value?.enable(false);
         onPrev();
       } else if (ev.deltaX < -60) {
         gesture.value?.enable(false);
         onNext();
+      } else {
+        return;
       }
 
-      // Re-enable after animation is definitely finished
-      setTimeout(() => {
+      reEnableTimeout = setTimeout(() => {
         gesture.value?.enable(true);
+        reEnableTimeout = null;
       }, 350);
     },
   });
@@ -311,6 +329,7 @@ const onDelete = () => {
 };
 
 const setZoomMode = (zoom: boolean) => {
+  if (zoom) isZoomReady.value = false;
   isZoomMode.value = zoom;
 };
 
