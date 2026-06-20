@@ -208,7 +208,6 @@ export const httpService = async (
 
     if (!response.ok) {
       if (response.status === 419) {
-        console.warn('CSRF token mismatch, refreshing token and retrying request...');
         await fetchCsrfToken();
         if (!csrfToken) {
           throw new HttpError('Failed to refresh CSRF token', 500);
@@ -218,8 +217,7 @@ export const httpService = async (
         if (!retryResponse.ok) {
           throw new HttpError(retryResponse.statusText, retryResponse.status);
         }
-
-        return results;
+        return options.responseType === 'blob' ? await retryResponse.blob() : await retryResponse.json();
       }
 
       if (response.status === 401 && endpoint !== authEndpoint) {
@@ -231,7 +229,6 @@ export const httpService = async (
           });
 
           if (refreshResponse.ok) {
-            console.log('Session refreshed successfully, retrying request...');
             const freshHeaders = isFormData
               ? { ...options.headers, ...(csrfToken ? { 'X-XSRF-TOKEN': csrfToken } : {}) }
               : getHeaders(csrfToken, options);
@@ -243,7 +240,6 @@ export const httpService = async (
           }
           throw new Error('Unauthorized');
         } catch (error: unknown) {
-          console.error('Failed to refresh session:', error);
           const err = new HttpError('Unauthorized', 401);
           await me.logout();
           app.setNotification(err.message, err);
@@ -268,8 +264,6 @@ export const httpService = async (
 
     return results;
   } catch (error: unknown) {
-    console.log('HTTP Error:', error);
-
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
         const err = new HttpError('Request timed out', 408);
