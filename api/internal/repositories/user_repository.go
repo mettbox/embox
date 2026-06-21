@@ -87,6 +87,9 @@ func (r *userRepository) Delete(id uuid.UUID) error {
 func (r *userRepository) GenerateToken(email string) (*models.User, error) {
 	var user models.User
 	if err := r.db.Where("email = ?", email).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user not found")
+		}
 		return nil, err
 	}
 
