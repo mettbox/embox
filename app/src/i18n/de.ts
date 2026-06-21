@@ -124,4 +124,12 @@ export default {
   'Edit Album': 'Album bearbeiten',
   // Edit Media modal
   'Add a caption…': 'Füge eine Bildunterschrift hinzu…',
+  // PWA install modal
+  pwa_install_title: 'App installieren',
+  pwa_install_intro: 'Du kannst diese App auf deinem Gerät installieren:',
+  pwa_install_ios_step1: 'Tippe auf den Teilen-Button in der Safari-Menüleiste',
+  pwa_install_ios_step2: 'Wähle „Zum Home-Bildschirm"',
+  pwa_install_android_step1: 'Tippe auf die drei Punkte oben rechts im Browser-Menü',
+  pwa_install_android_step2: 'Wähle „App installieren" oder „Zum Startbildschirm hinzufügen"',
+  pwa_install_dismiss: 'Nicht mehr anzeigen',
 };

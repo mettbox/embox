@@ -7,6 +7,7 @@
     </ion-page>
 
     <app-notification />
+    <app-pwa-install-modal />
   </ion-app>
 </template>
 
@@ -20,6 +21,7 @@ import { useI18n } from 'vue-i18n';
 
 import appMenu from '@/components/app/app-menu.vue';
 import appNotification from '@/components/app/app-notification.vue';
+import appPwaInstallModal from '@/components/app/app-pwa-install-modal.vue';
 
 const app = useAppStore();
 const { t } = useI18n();
