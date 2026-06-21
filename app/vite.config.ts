@@ -5,7 +5,7 @@ import { VitePWA, VitePWAOptions } from 'vite-plugin-pwa';
 
 const pwa: Partial<VitePWAOptions> = {
   registerType: 'autoUpdate',
-  includeAssets: ['manifest.json', 'favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+  includeAssets: ['manifest.json', 'favicon.svg', 'robots.txt', 'apple-touch-icon.png'],
   workbox: {
     runtimeCaching: [
       {
