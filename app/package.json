@@ -23,6 +23,7 @@
     "zoompinch": "^0.0.48"
   },
   "devDependencies": {
+    "@types/node": "^26.0.0",
     "@vitejs/plugin-vue": "^4.0.0",
     "@vue/eslint-config-typescript": "^12.0.0",
     "eslint": "^8.35.0",
