@@ -8,7 +8,6 @@
       :id="datetimeId"
       :value="props.modelValue"
       :first-day-of-week="1"
-      :prefer-wheel="true"
       presentation="date-time"
     >
       <ion-buttons slot="buttons">
@@ -18,10 +17,9 @@
           @click="cancel"
         >
           <ion-icon
-            slot="start"
+            slot="icon-only"
             :icon="closeCircleOutline"
           />
-          {{ $t('Cancel') }}
         </ion-button>
 
         <ion-button
@@ -42,9 +40,8 @@
           :strong="true"
           @click="confirm()"
         >
-          {{ $t('Apply') }}
           <ion-icon
-            slot="start"
+            slot="icon-only"
             :icon="checkmarkCircleOutline"
           />
         </ion-button>
@@ -104,11 +101,3 @@ const setAll = () => {
   }
 };
 </script>
-
-<style scoped>
-ion-datetime {
-  --background: var(--ion-color-light);
-  --background-rgb: var(--ion-color-light-rgb);
-  box-shadow: rgba(var(--ion-color-light-rgb), 0.3) 0px 10px 15px -3px;
-}
-</style>
