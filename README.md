@@ -93,7 +93,37 @@ uberspace web backend list
 
 Setup Database
 
-@TODO
+The default database and user are created automatically and match the Uberspace username. The password is stored in `~/.my.cnf`.
+
+Show credentials:
+
+```sh
+my_print_defaults client
+```
+
+Create a dedicated database (name must follow pattern `username_databasename`):
+
+```sh
+mysql -e "CREATE DATABASE mettbox_em"
+```
+
+List existing databases:
+
+```sh
+mysql -e "SHOW DATABASES"
+```
+
+MySQL GUI (Adminer): https://mysql.uberspace.de/adminer/
+
+Connection details for the `.env`:
+
+| Setting  | Value                       |
+|----------|-----------------------------|
+| Host     | `localhost`                 |
+| Port     | `3306`                      |
+| User     | Uberspace username          |
+| Password | see `~/.my.cnf`             |
+| Database | `mettbox_em`                |
 
 ### Build API
 
