@@ -33,7 +33,7 @@ func (h *AuthHandler) GenerateToken(c *gin.Context) {
 	user, err := h.userService.GenerateToken(req.Email)
 	if err != nil {
 		if err.Error() == "user not found" {
-			response.JSONError(c, http.StatusNotFound, "Unknown user", err.Error())
+			response.JSONError(c, http.StatusBadRequest, "Invalid email", "no account associated with this email")
 			return
 		}
 		response.JSONError(c, http.StatusInternalServerError, "Failed to generate token", err.Error())
