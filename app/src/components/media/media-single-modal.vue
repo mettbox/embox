@@ -70,7 +70,7 @@
         <img
           v-else-if="media.type === 'image'"
           ref="imgRef"
-          :class="{ 'main-media': true, loaded: isMediaLoaded && !(isZoomMode && isZoomReady) }"
+          :class="{ 'main-media': true, loaded: isMediaLoaded && !isZoomMode }"
           :key="'img-' + media.id"
           :src="fileUrl"
           :draggable="false"
@@ -84,7 +84,6 @@
           :natural-width="imgNaturalWidth"
           :natural-height="imgNaturalHeight"
           @close="setZoomMode(false)"
-          @ready="isZoomReady = true"
         />
       </div>
       <div
@@ -211,7 +210,6 @@ const isMediaLoaded = ref(false);
 const imgRef = ref<HTMLImageElement | null>(null);
 const imgNaturalWidth = ref(1920);
 const imgNaturalHeight = ref(1080);
-const isZoomReady = ref(false);
 const originalAbortController = ref<AbortController | null>(null);
 const blobUrl = ref<string | null>(null);
 
@@ -365,7 +363,6 @@ const onDelete = () => {
 };
 
 const setZoomMode = (zoom: boolean) => {
-  if (zoom) isZoomReady.value = false;
   isZoomMode.value = zoom;
 };
 
