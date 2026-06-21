@@ -3,13 +3,13 @@
     class="media-upload-modal"
     ref="modalRef"
     :is-open="props.isOpen"
-    @did-dismiss="onCancel"
+    @did-dismiss="onDidDismiss"
   >
     <ion-header>
       <ion-toolbar color="primary">
         <ion-title>{{ $t('Upload') }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button @click="onCancel">
+          <ion-button @click="dismiss">
             <ion-icon
               slot="icon-only"
               :icon="close"
@@ -273,17 +273,18 @@ const triggerUploadInput = () => {
   }
 };
 
-const onCancel = async () => {
+const dismiss = () => {
+  modalRef.value?.$el.dismiss(null, 'cancel');
+};
+
+const onDidDismiss = () => {
   uploadStore.files.forEach((f) => URL.revokeObjectURL(f.file));
   uploadStore.clearFiles();
   isUploading.value = false;
   if (inputRef.value) {
     inputRef.value.value = '';
   }
-
-  if (modalRef.value) {
-    modalRef.value.$el.dismiss(null, 'cancel');
-  }
+  emit('did-dismiss');
 };
 
 const onRemove = (index: number) => {
@@ -308,7 +309,7 @@ const onAlbumSelected = (albumId: number) => {
 const onSave = async () => {
   const { success, failed } = await uploadStore.uploadFiles();
   emit('did-upload', { success, failed });
-  onCancel();
+  dismiss();
 };
 
 defineExpose({
