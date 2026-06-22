@@ -643,11 +643,11 @@ const initGestures = () => {
       let targetColumns = initialColumns;
 
       // Make pinch-zoom less sensitive (higher thresholds and steps)
-      if (scale > 1.1) {
-        const steps = Math.floor((scale - 1.1) / 0.25) + 1;
+      if (scale > 1.2) {
+        const steps = Math.floor((scale - 1.2) / 0.5) + 1;
         targetColumns = Math.max(1, initialColumns - steps);
-      } else if (scale < 0.9) {
-        const steps = Math.floor((0.9 - scale) / 0.15) + 1;
+      } else if (scale < 0.8) {
+        const steps = Math.floor((0.8 - scale) / 0.3) + 1;
         targetColumns = Math.min(20, initialColumns + steps);
       }
 
