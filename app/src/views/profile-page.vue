@@ -17,6 +17,7 @@
             <ion-radio
               value="dark"
               justify="space-between"
+              :color="app.isDarkMode ? 'light' : 'primary'"
             >
               <ion-icon
                 :icon="moon"
@@ -29,6 +30,7 @@
             <ion-radio
               value="light"
               justify="space-between"
+              :color="app.isDarkMode ? 'light' : 'primary'"
             >
               <ion-icon
                 :icon="sunny"
@@ -45,6 +47,7 @@
               <ion-icon
                 :icon="contrastOutline"
                 class="ion-padding-end"
+                :color="app.isDarkMode ? 'light' : 'primary'"
               />
               {{ $t('System') }}
             </ion-radio>

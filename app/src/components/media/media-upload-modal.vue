@@ -107,6 +107,7 @@
             <ion-icon
               slot="icon-only"
               :icon="closeCircleOutline"
+              :color="app.isDarkMode ? 'light' : 'primary'"
             />
           </ion-button>
         </ion-item>
@@ -202,7 +203,9 @@ import mediaDatepicker from '@/components/media/media-datepicker.vue';
 import * as exifr from 'exifr';
 import { useUploadStore } from '@/stores/upload.store';
 import albumSelectModal from '@/components/album/album-select-modal.vue';
+import { useAppStore } from '@/stores/app.store';
 
+const app = useAppStore();
 const uploadStore = useUploadStore();
 
 const props = defineProps<{

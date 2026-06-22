@@ -27,6 +27,7 @@
               shape="round"
               router-direction="forward"
               :router-link="{ name: 'profile' }"
+              :color="app.isDarkMode ? 'light' : 'primary'"
             >
               <ion-icon
                 slot="icon-only"
@@ -251,5 +252,9 @@ ion-menu {
   ion-list-header {
     font-weight: 500;
   }
+}
+
+.ion-palette-dark ion-menu ion-item ion-icon {
+  color: var(--ion-color-light);
 }
 </style>

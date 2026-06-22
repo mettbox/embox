@@ -27,7 +27,6 @@
             <ion-icon
               :icon="shareOutline"
               slot="start"
-              color="primary"
             />
             <ion-label class="ion-text-wrap">{{ $t('pwa_install_ios_step1') }}</ion-label>
           </ion-item>
@@ -35,7 +34,6 @@
             <ion-icon
               :icon="addCircleOutline"
               slot="start"
-              color="primary"
             />
             <ion-label class="ion-text-wrap">{{ $t('pwa_install_ios_step2') }}</ion-label>
           </ion-item>
@@ -48,7 +46,6 @@
             <ion-icon
               :icon="ellipsisVertical"
               slot="start"
-              color="primary"
             />
             <ion-label class="ion-text-wrap">{{ $t('pwa_install_android_step1') }}</ion-label>
           </ion-item>
@@ -56,7 +53,6 @@
             <ion-icon
               :icon="addCircleOutline"
               slot="start"
-              color="primary"
             />
             <ion-label class="ion-text-wrap">{{ $t('pwa_install_android_step2') }}</ion-label>
           </ion-item>
@@ -65,10 +61,12 @@
     </ion-content>
 
     <ion-footer>
-      <ion-toolbar>
+      <ion-toolbar color="primary">
         <ion-button
           expand="block"
           fill="clear"
+          size="small"
+          color="light"
           @click="dismissPermanently"
         >
           {{ $t('pwa_install_dismiss') }}
