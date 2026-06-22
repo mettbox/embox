@@ -5,8 +5,8 @@
     @did-dismiss="onClose"
   >
     <ion-header
-      v-show="!isZoomMode"
       class="ion-no-border"
+      v-show="canNavigate"
     >
       <ion-toolbar color="primary">
         <ion-buttons slot="start">
@@ -31,13 +31,12 @@
       </ion-toolbar>
     </ion-header>
 
-    <ion-content :color="isZoomMode ? 'dark' : 'primary'">
+    <ion-content color="primary">
       <ion-button
-        v-if="isZoomMode"
         slot="fixed"
-        color="light"
         shape="round"
-        @click="setZoomMode(false)"
+        v-if="!canNavigate"
+        @click="onClose()"
       >
         <ion-icon
           slot="icon-only"
@@ -75,14 +74,16 @@
           :src="fileUrl"
           :draggable="false"
           @load="onMediaLoaded"
-          @click="setZoomMode(true)"
         />
         <media-zoom
+          ref="mediaZoomRef"
           v-if="isZoomMode"
+          :key="media.id"
           :is-open="isZoomMode"
           :file-url="fileUrl"
           :natural-width="imgNaturalWidth"
           :natural-height="imgNaturalHeight"
+          :container-width="containerWidth"
           @close="setZoomMode(false)"
         />
       </div>
@@ -95,12 +96,12 @@
     </ion-content>
 
     <ion-footer
-      v-show="!isZoomMode"
+      v-show="canNavigate"
       class="ion-no-border"
     >
       <ion-toolbar
-        color="primary"
         class="footer"
+        color="primary"
       >
         <ion-text class="caption">
           <span
@@ -198,13 +199,23 @@ const { getFileUrl, getThumbnailUrl } = useThumbnail();
 
 const modalRef = ref<InstanceType<typeof IonModal> | null>(null);
 const mediaWrapperRef = ref<HTMLElement | null>(null);
+const mediaZoomRef = ref<InstanceType<typeof mediaZoom> | null>(null);
 const gesture = ref<ReturnType<typeof createGesture> | null>(null);
 const fileUrl = ref<string | undefined>(undefined);
-const isZoomMode = ref(false);
+const isZoomMode = ref(true);
 const prevFileUrl = ref<string | null>(null);
 const nextFileUrl = ref<string | null>(null);
 
+const containerWidth = computed(() => mediaWrapperRef.value?.offsetWidth || 0);
+
 const isAdmin = computed(() => me.isAdmin);
+
+const canNavigate = computed(() => {
+  if (!mediaZoomRef.value) return true;
+  const initialScale = mediaZoomRef.value.initialScale;
+  const currentScale = mediaZoomRef.value.currentScale;
+  return currentScale <= initialScale * 1.01;
+});
 
 const isMediaLoaded = ref(false);
 const imgRef = ref<HTMLImageElement | null>(null);
@@ -265,6 +276,8 @@ watch(
 
     cleanupOriginal();
     isMediaLoaded.value = false;
+    isZoomMode.value = true;
+    mediaZoomRef.value?.reset();
     if (!newMedia) return;
 
     if (newMedia.type === 'image') {
@@ -309,7 +322,8 @@ const slideOut = async (direction: 'left' | 'right') => {
 };
 
 const onPrev = async () => {
-  if (!props.prevMediaId || isZoomMode.value) return;
+  if (!props.prevMediaId || !canNavigate.value) return;
+  mediaZoomRef.value?.reset();
   await slideOut('right');
   isMediaLoaded.value = false;
   fileUrl.value = undefined; // Trigger loading spinner
@@ -317,7 +331,8 @@ const onPrev = async () => {
 };
 
 const onNext = async () => {
-  if (!props.nextMediaId || isZoomMode.value) return;
+  if (!props.nextMediaId || !canNavigate.value) return;
+  mediaZoomRef.value?.reset();
   await slideOut('left');
   isMediaLoaded.value = false;
   fileUrl.value = undefined; // Trigger loading spinner
@@ -386,6 +401,11 @@ ion-modal {
   --height: 100%;
   --width: 100%;
   --border-radius: 0;
+}
+
+ion-button[slot='fixed'] {
+  top: 0;
+  right: 0;
 }
 
 .main-media {

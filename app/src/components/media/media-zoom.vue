@@ -5,8 +5,8 @@
       ref="zoompinchRef"
       :width="props.naturalWidth || 1920"
       :height="props.naturalHeight || 1080"
-      :offset="{ top: 56, right: 0, bottom: 56, left: 0 }"
-      :min-scale="0.5"
+      :offset="{ top: 0, right: 0, bottom: 0, left: 0 }"
+      :min-scale="initialScale"
       :max-scale="10"
       :rotation="false"
       :bounds="true"
@@ -30,13 +30,14 @@
 import { Zoompinch } from 'zoompinch';
 import '@/theme/zoompinch.css';
 import { IonImg } from '@ionic/vue';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 const props = defineProps<{
   isOpen: boolean;
   fileUrl: string;
   naturalWidth?: number;
   naturalHeight?: number;
+  containerWidth?: number;
 }>();
 
 const emit = defineEmits<{
@@ -46,10 +47,27 @@ const emit = defineEmits<{
 const zoompinchRef = ref<InstanceType<typeof Zoompinch>>();
 const transform = ref({ x: 0, y: 0, scale: 1, rotate: 0 });
 
+const initialScale = computed(() => {
+  if (!props.containerWidth || !props.naturalWidth) return 1;
+  return props.containerWidth / props.naturalWidth;
+});
+
+const currentScale = computed(() => transform.value.scale);
+
+const reset = () => {
+  transform.value = { x: 0, y: 0, scale: initialScale.value, rotate: 0 };
+};
+
 const onImgDidLoad = () => {
-  transform.value = { x: 0, y: 0, scale: 1, rotate: 0 };
+  reset();
   emit('ready');
 };
+
+defineExpose({
+  reset,
+  initialScale,
+  currentScale,
+});
 </script>
 
 <style scoped>
