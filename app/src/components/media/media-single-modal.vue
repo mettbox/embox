@@ -49,18 +49,9 @@
         ref="mediaWrapperRef"
       >
         <ion-spinner v-if="!isMediaLoaded && media.type !== 'video'" />
-        <img
-          v-if="media.type === 'image'"
-          ref="imgRef"
-          :class="{ 'main-media': true, loaded: isMediaLoaded && !isZoomMode }"
-          :key="'img-' + media.id"
-          :src="fileUrl"
-          :draggable="false"
-          @load="onMediaLoaded"
-        />
         <video
-          v-else-if="media.type === 'video'"
-          :class="{ 'main-media': true, loaded: isMediaLoaded && !isZoomMode }"
+          v-if="media.type === 'video'"
+          :class="{ 'main-media': true, loaded: isMediaLoaded }"
           :key="'video-' + media.id"
           :src="fileUrl"
           controls
@@ -69,22 +60,18 @@
         />
         <audio
           v-else-if="media.type === 'audio'"
-          :class="{ 'main-media': true, loaded: isMediaLoaded && !isZoomMode }"
+          :class="{ 'main-media': true, loaded: isMediaLoaded }"
           :key="'audio-' + media.id"
           :src="fileUrl"
           controls
           @loadeddata="onMediaLoaded"
         />
         <media-zoom
+          v-else-if="media.type === 'image'"
           ref="mediaZoomRef"
-          v-if="isZoomMode"
-          :key="media.id"
-          :is-open="isZoomMode"
+          :is-open="true"
           :file-url="fileUrl"
-          :natural-width="imgNaturalWidth"
-          :natural-height="imgNaturalHeight"
-          :container-width="containerWidth"
-          @close="setZoomMode(false)"
+          @ready="onMediaLoaded"
         />
       </div>
       <div
@@ -202,11 +189,6 @@ const mediaWrapperRef = ref<HTMLElement | null>(null);
 const mediaZoomRef = ref<InstanceType<typeof mediaZoom> | null>(null);
 const gesture = ref<ReturnType<typeof createGesture> | null>(null);
 const fileUrl = ref<string | undefined>(undefined);
-const isZoomMode = ref(true);
-const prevFileUrl = ref<string | null>(null);
-const nextFileUrl = ref<string | null>(null);
-
-const containerWidth = computed(() => mediaWrapperRef.value?.offsetWidth || 0);
 
 const isAdmin = computed(() => me.isAdmin);
 
@@ -218,54 +200,50 @@ const canNavigate = computed(() => {
 });
 
 const isMediaLoaded = ref(false);
-const imgRef = ref<HTMLImageElement | null>(null);
-const imgNaturalWidth = ref(1920);
-const imgNaturalHeight = ref(1080);
-const originalAbortController = ref<AbortController | null>(null);
-const blobUrl = ref<string | null>(null);
+let originalPreloader: HTMLImageElement | null = null;
+let thumbPreloaders: HTMLImageElement[] = [];
 
 const onMediaLoaded = () => {
   isMediaLoaded.value = true;
-  imgNaturalWidth.value = imgRef.value?.naturalWidth || 1920;
-  imgNaturalHeight.value = imgRef.value?.naturalHeight || 1080;
 };
 
-const preloadMedia = (url: string | null) => {
-  if (!url) return;
-  const img = new Image();
-  img.src = url;
-};
-
-const cleanupOriginal = () => {
-  originalAbortController.value?.abort();
-  originalAbortController.value = null;
-  if (blobUrl.value) {
-    URL.revokeObjectURL(blobUrl.value);
-    blobUrl.value = null;
+const cancelOriginalPreload = () => {
+  if (originalPreloader) {
+    originalPreloader.onload = null;
+    originalPreloader.onerror = null;
+    originalPreloader.src = '';
+    originalPreloader = null;
   }
 };
 
-const loadOriginal = async (mediaId: number) => {
-  const controller = new AbortController();
-  originalAbortController.value = controller;
-
-  try {
-    const response = await fetch(getFileUrl(mediaId), {
-      credentials: 'include',
-      signal: controller.signal,
-    });
-    if (!response.ok || controller.signal.aborted) return;
-
-    const blob = await response.blob();
-    if (controller.signal.aborted) return;
-
-    const newBlobUrl = URL.createObjectURL(blob);
-    blobUrl.value = newBlobUrl;
-    fileUrl.value = newBlobUrl;
-  } catch (err) {
-    if (err instanceof Error && err.name !== 'AbortError') {
-      // thumbnail stays visible
+const loadOriginalForImage = (mediaId: number) => {
+  cancelOriginalPreload();
+  const img = new Image();
+  originalPreloader = img;
+  img.onload = () => {
+    if (props.media?.id === mediaId) {
+      fileUrl.value = getFileUrl(mediaId);
     }
+    originalPreloader = null;
+  };
+  img.onerror = () => {
+    originalPreloader = null;
+  };
+  img.src = getFileUrl(mediaId);
+};
+
+const cancelThumbPreloads = () => {
+  for (const img of thumbPreloaders) img.src = '';
+  thumbPreloaders = [];
+};
+
+const preloadAdjacentThumbs = (...ids: (number | null)[]) => {
+  cancelThumbPreloads();
+  for (const id of ids) {
+    if (!id) continue;
+    const img = new Image();
+    img.src = getThumbnailUrl(id);
+    thumbPreloaders.push(img);
   }
 };
 
@@ -274,41 +252,30 @@ watch(
   (newMedia, oldMedia) => {
     if (newMedia?.id === oldMedia?.id && fileUrl.value) return;
 
-    cleanupOriginal();
+    cancelOriginalPreload();
     isMediaLoaded.value = false;
 
-    // Properly handle media type changes
-    const oldType = oldMedia?.type;
-    const newType = newMedia?.type;
-
-    // Reset zoom if switching away from image, or to image
-    if (oldType === 'image' || newType === 'image') {
-      mediaZoomRef.value?.reset();
+    if (!newMedia) {
+      fileUrl.value = undefined;
+      return;
     }
-
-    if (!newMedia) return;
 
     if (newMedia.type === 'image') {
+      // Show thumbnail immediately, swap to original once preloaded into HTTP cache.
       fileUrl.value = getThumbnailUrl(newMedia.id);
-      loadOriginal(newMedia.id);
-      isZoomMode.value = true;
+      loadOriginalForImage(newMedia.id);
     } else {
       fileUrl.value = getFileUrl(newMedia.id);
-      isZoomMode.value = false;
     }
 
-    prevFileUrl.value = props.prevMediaId ? getThumbnailUrl(props.prevMediaId) : null;
-    nextFileUrl.value = props.nextMediaId ? getThumbnailUrl(props.nextMediaId) : null;
-    preloadMedia(prevFileUrl.value);
-    preloadMedia(nextFileUrl.value);
+    preloadAdjacentThumbs(props.prevMediaId, props.nextMediaId);
   },
   { immediate: true },
 );
 
 const onClose = () => {
-  cleanupOriginal();
+  cancelOriginalPreload();
   fileUrl.value = undefined;
-  setZoomMode(false);
   if (modalRef.value) {
     modalRef.value.$el.dismiss(null, 'cancel');
   }
@@ -319,64 +286,56 @@ const handleKey = (e: KeyboardEvent) => {
   if (e.key === 'ArrowRight') onNext();
 };
 
-const slideOut = async (direction: 'left' | 'right') => {
+const slideOut = (direction: 'left' | 'right') => {
   if (!mediaWrapperRef.value) return;
-
   const anim = createAnimation()
     .addElement(mediaWrapperRef.value)
     .duration(300)
     .fromTo('transform', 'translateX(0)', `translateX(${direction === 'left' ? '-100%' : '100%'})`)
     .fromTo('opacity', '1', '0');
-  await anim.play();
-  anim.destroy();
+  anim.play().then(() => anim.destroy());
 };
 
-const onPrev = async () => {
+const onPrev = () => {
   if (!props.prevMediaId || !canNavigate.value) return;
   mediaZoomRef.value?.reset();
-  await slideOut('right');
+  slideOut('right');
   isMediaLoaded.value = false;
-  fileUrl.value = undefined; // Trigger loading spinner
   emit('prev', props.media.id);
 };
 
-const onNext = async () => {
+const onNext = () => {
   if (!props.nextMediaId || !canNavigate.value) return;
   mediaZoomRef.value?.reset();
-  await slideOut('left');
+  slideOut('left');
   isMediaLoaded.value = false;
-  fileUrl.value = undefined; // Trigger loading spinner
   emit('next', props.media.id);
 };
 
-const initSwipe = async () => {
+const initSwipe = () => {
   const gestureEl =
     modalRef.value?.$el?.querySelector('.modal-wrapper, ion-content') || modalRef.value?.$el || modalRef.value;
 
-  let reEnableTimeout: ReturnType<typeof setTimeout> | null = null;
+  let firedThisGesture = false;
 
   gesture.value = createGesture({
     el: gestureEl,
     gestureName: 'swipe',
     direction: 'x',
     threshold: 15,
+    onStart() {
+      firedThisGesture = false;
+    },
     onMove(ev) {
-      if (reEnableTimeout !== null) return;
-
-      if (ev.deltaX > 60) {
-        gesture.value?.enable(false);
+      if (firedThisGesture) return;
+      if (!canNavigate.value) return;
+      if (ev.deltaX > 60 && props.prevMediaId) {
+        firedThisGesture = true;
         onPrev();
-      } else if (ev.deltaX < -60) {
-        gesture.value?.enable(false);
+      } else if (ev.deltaX < -60 && props.nextMediaId) {
+        firedThisGesture = true;
         onNext();
-      } else {
-        return;
       }
-
-      reEnableTimeout = setTimeout(() => {
-        gesture.value?.enable(true);
-        reEnableTimeout = null;
-      }, 350);
     },
   });
   gesture.value.enable(true);
@@ -387,10 +346,6 @@ const onDelete = () => {
   onClose();
 };
 
-const setZoomMode = (zoom: boolean) => {
-  isZoomMode.value = zoom;
-};
-
 onMounted(async () => {
   window.addEventListener('keydown', handleKey);
   await nextTick();
@@ -399,10 +354,9 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKey);
-  if (gesture.value) {
-    gesture.value.destroy();
-  }
-  cleanupOriginal();
+  gesture.value?.destroy();
+  cancelOriginalPreload();
+  cancelThumbPreloads();
 });
 </script>
 
@@ -431,18 +385,12 @@ ion-button[slot='fixed'] {
   transition: opacity 0.2s ease-in-out;
   user-select: none;
   -webkit-user-drag: none;
-  pointer-events: none; /* Prevent intercepting clicks when hidden or loading */
+  pointer-events: none;
 }
 
 .main-media.loaded {
   opacity: 1;
   pointer-events: auto;
-}
-
-/* Image scales to full width, height adjusts automatically */
-img.main-media {
-  width: 100%;
-  height: auto;
 }
 
 /* Video shows poster immediately, doesn't need to wait for loaded state */
@@ -481,25 +429,6 @@ audio {
   display: block;
   margin-left: auto;
   margin-right: auto;
-}
-
-.slide-left-leave-active,
-.slide-right-leave-active {
-  transition:
-    transform 0.3s,
-    opacity 0.3s;
-  position: absolute;
-  width: 100%;
-}
-
-.slide-left-leave-to {
-  transform: translateX(-100%);
-  opacity: 0;
-}
-
-.slide-right-leave-to {
-  transform: translateX(100%);
-  opacity: 0;
 }
 
 .caption {
