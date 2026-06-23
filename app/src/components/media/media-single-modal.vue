@@ -48,9 +48,18 @@
         class="media-wrapper"
         ref="mediaWrapperRef"
       >
-        <ion-spinner v-if="!isMediaLoaded" />
+        <ion-spinner v-if="!isMediaLoaded && media.type !== 'video'" />
+        <img
+          v-if="media.type === 'image'"
+          ref="imgRef"
+          :class="{ 'main-media': true, loaded: isMediaLoaded && !isZoomMode }"
+          :key="'img-' + media.id"
+          :src="fileUrl"
+          :draggable="false"
+          @load="onMediaLoaded"
+        />
         <video
-          v-if="media.type === 'video'"
+          v-else-if="media.type === 'video'"
           :class="{ 'main-media': true, loaded: isMediaLoaded && !isZoomMode }"
           :key="'video-' + media.id"
           :src="fileUrl"
@@ -65,15 +74,6 @@
           :src="fileUrl"
           controls
           @loadeddata="onMediaLoaded"
-        />
-        <img
-          v-else-if="media.type === 'image'"
-          ref="imgRef"
-          :class="{ 'main-media': true, loaded: isMediaLoaded && !isZoomMode }"
-          :key="'img-' + media.id"
-          :src="fileUrl"
-          :draggable="false"
-          @load="onMediaLoaded"
         />
         <media-zoom
           ref="mediaZoomRef"
@@ -276,15 +276,25 @@ watch(
 
     cleanupOriginal();
     isMediaLoaded.value = false;
-    isZoomMode.value = true;
-    mediaZoomRef.value?.reset();
+
+    // Properly handle media type changes
+    const oldType = oldMedia?.type;
+    const newType = newMedia?.type;
+
+    // Reset zoom if switching away from image, or to image
+    if (oldType === 'image' || newType === 'image') {
+      mediaZoomRef.value?.reset();
+    }
+
     if (!newMedia) return;
 
     if (newMedia.type === 'image') {
       fileUrl.value = getThumbnailUrl(newMedia.id);
       loadOriginal(newMedia.id);
+      isZoomMode.value = true;
     } else {
       fileUrl.value = getFileUrl(newMedia.id);
+      isZoomMode.value = false;
     }
 
     prevFileUrl.value = props.prevMediaId ? getThumbnailUrl(props.prevMediaId) : null;
@@ -429,9 +439,22 @@ ion-button[slot='fixed'] {
   pointer-events: auto;
 }
 
+/* Image scales to full width, height adjusts automatically */
+img.main-media {
+  width: 100%;
+  height: auto;
+}
+
+/* Video shows poster immediately, doesn't need to wait for loaded state */
+video.main-media {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 /* Audio shouldn't stretch to full height */
 audio.main-media {
-  height: auto;
+  height: 50px;
+  width: 300px;
 }
 
 .media-wrapper {
