@@ -1,6 +1,6 @@
 module embox
 
-go 1.25.1
+go 1.26.3
 
 require (
 	github.com/chai2010/webp v1.4.0
@@ -9,6 +9,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
+	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.30.0
 )
 
@@ -18,7 +19,6 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	golang.org/x/image v0.0.0-20211028202545-6944b10bf410 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
-	gorm.io/driver/sqlite v1.6.0 // indirect
 )
 
 require (
