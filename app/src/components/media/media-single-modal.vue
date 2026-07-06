@@ -453,7 +453,9 @@ audio.main-media {
 .slide-left-leave-active,
 .slide-right-enter-active,
 .slide-right-leave-active {
-  transition: transform 250ms ease-out, opacity 250ms ease-out;
+  transition:
+    transform 250ms ease-out,
+    opacity 250ms ease-out;
 }
 
 .slide-left-enter-from {
