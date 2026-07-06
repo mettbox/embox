@@ -745,6 +745,7 @@ ion-content {
       grid-column: 1 / -1;
       padding: var(--ion-padding-half, 8px) var(--ion-padding, 16px);
       font-size: 0.875rem;
+      background-color: var(--ion-color-secondary);
     }
   }
 }

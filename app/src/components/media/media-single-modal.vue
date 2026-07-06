@@ -2,7 +2,8 @@
   <ion-modal
     ref="modalRef"
     :is-open="isOpen"
-    @did-dismiss="onClose"
+    @did-present="onDidPresent"
+    @did-dismiss="onDidDismiss"
   >
     <ion-header
       class="ion-no-border"
@@ -35,6 +36,7 @@
       <ion-button
         slot="fixed"
         shape="round"
+        color="secondary"
         v-if="!canNavigate"
         @click="onClose()"
       >
@@ -49,30 +51,39 @@
         ref="mediaWrapperRef"
       >
         <ion-spinner v-if="!isMediaLoaded && media.type !== 'video'" />
-        <video
-          v-if="media.type === 'video'"
-          :class="{ 'main-media': true, loaded: isMediaLoaded }"
-          :key="'video-' + media.id"
-          :src="fileUrl"
-          controls
-          :poster="getThumbnailUrl(media.id)"
-          @loadeddata="onMediaLoaded"
-        />
-        <audio
-          v-else-if="media.type === 'audio'"
-          :class="{ 'main-media': true, loaded: isMediaLoaded }"
-          :key="'audio-' + media.id"
-          :src="fileUrl"
-          controls
-          @loadeddata="onMediaLoaded"
-        />
-        <media-zoom
-          v-else-if="media.type === 'image'"
-          ref="mediaZoomRef"
-          :is-open="true"
-          :file-url="fileUrl"
-          @ready="onMediaLoaded"
-        />
+        <Transition :name="slideDirection">
+          <div
+            :key="media.id"
+            class="media-slide"
+          >
+            <media-zoom
+              v-if="media.type === 'image'"
+              ref="mediaZoomRef"
+              :is-open="true"
+              :file-url="fileUrl"
+              @ready="onMediaLoaded"
+            />
+            <video
+              v-else-if="media.type === 'video'"
+              :class="{ 'main-media': true, loaded: isMediaLoaded }"
+              :src="fileUrl"
+              controls
+              playsinline
+              webkit-playsinline
+              preload="metadata"
+              :poster="getThumbnailUrl(media.id)"
+              @loadeddata="onMediaLoaded"
+              @loadedmetadata="onMediaLoaded"
+            />
+            <audio
+              v-else-if="media.type === 'audio'"
+              :class="{ 'main-media': true, loaded: isMediaLoaded }"
+              :src="fileUrl"
+              controls
+              @loadeddata="onMediaLoaded"
+            />
+          </div>
+        </Transition>
       </div>
       <div
         v-else
@@ -139,11 +150,10 @@ import {
   IonToolbar,
   IonIcon,
   IonButtons,
-  createAnimation,
   IonSpinner,
   IonText,
 } from '@ionic/vue';
-import { onMounted, onUnmounted, ref, nextTick, computed, watch } from 'vue';
+import { onMounted, onUnmounted, ref, computed, watch } from 'vue';
 import { createGesture } from '@ionic/vue';
 import { heart, close, ellipsisHorizontalCircleOutline, heartOutline } from 'ionicons/icons';
 import mediaSelectPopover from './media-select-popover.vue';
@@ -189,6 +199,7 @@ const mediaWrapperRef = ref<HTMLElement | null>(null);
 const mediaZoomRef = ref<InstanceType<typeof mediaZoom> | null>(null);
 const gesture = ref<ReturnType<typeof createGesture> | null>(null);
 const fileUrl = ref<string | undefined>(undefined);
+const slideDirection = ref<'slide-left' | 'slide-right'>('slide-left');
 
 const isAdmin = computed(() => me.isAdmin);
 
@@ -196,7 +207,8 @@ const canNavigate = computed(() => {
   if (!mediaZoomRef.value) return true;
   const initialScale = mediaZoomRef.value.initialScale;
   const currentScale = mediaZoomRef.value.currentScale;
-  return currentScale <= initialScale * 1.01;
+  const isPinching = mediaZoomRef.value.isPinching;
+  return currentScale <= initialScale * 1.01 && !isPinching;
 });
 
 const isMediaLoaded = ref(false);
@@ -286,40 +298,35 @@ const handleKey = (e: KeyboardEvent) => {
   if (e.key === 'ArrowRight') onNext();
 };
 
-const slideOut = (direction: 'left' | 'right') => {
-  if (!mediaWrapperRef.value) return;
-  const anim = createAnimation()
-    .addElement(mediaWrapperRef.value)
-    .duration(300)
-    .fromTo('transform', 'translateX(0)', `translateX(${direction === 'left' ? '-100%' : '100%'})`)
-    .fromTo('opacity', '1', '0');
-  anim.play().then(() => anim.destroy());
-};
-
 const onPrev = () => {
   if (!props.prevMediaId || !canNavigate.value) return;
+  slideDirection.value = 'slide-right';
   mediaZoomRef.value?.reset();
-  slideOut('right');
   isMediaLoaded.value = false;
   emit('prev', props.media.id);
 };
 
 const onNext = () => {
   if (!props.nextMediaId || !canNavigate.value) return;
+  slideDirection.value = 'slide-left';
   mediaZoomRef.value?.reset();
-  slideOut('left');
   isMediaLoaded.value = false;
   emit('next', props.media.id);
 };
 
 const initSwipe = () => {
-  const gestureEl =
-    modalRef.value?.$el?.querySelector('.modal-wrapper, ion-content') || modalRef.value?.$el || modalRef.value;
+  gesture.value?.destroy();
+  gesture.value = null;
+
+  const el =
+    (modalRef.value?.$el?.querySelector('.modal-wrapper') as HTMLElement | null) ??
+    (mediaWrapperRef.value as HTMLElement | null);
+  if (!el) return;
 
   let firedThisGesture = false;
 
   gesture.value = createGesture({
-    el: gestureEl,
+    el,
     gestureName: 'swipe',
     direction: 'x',
     threshold: 15,
@@ -341,15 +348,24 @@ const initSwipe = () => {
   gesture.value.enable(true);
 };
 
+const onDidPresent = () => {
+  initSwipe();
+};
+
+const onDidDismiss = () => {
+  gesture.value?.destroy();
+  gesture.value = null;
+  cancelOriginalPreload();
+  fileUrl.value = undefined;
+};
+
 const onDelete = () => {
   emit('delete');
   onClose();
 };
 
-onMounted(async () => {
+onMounted(() => {
   window.addEventListener('keydown', handleKey);
-  await nextTick();
-  initSwipe();
 });
 
 onUnmounted(() => {
@@ -415,14 +431,46 @@ audio.main-media {
   overflow: hidden;
 }
 
+.media-slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
 /* Ensure zoom component takes full space */
-.media-wrapper > :deep(.projection-wrapper) {
+.media-wrapper :deep(.projection-wrapper) {
   width: 100%;
   height: 100%;
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 10;
+}
+
+.slide-left-enter-active,
+.slide-left-leave-active,
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: transform 250ms ease-out, opacity 250ms ease-out;
+}
+
+.slide-left-enter-from {
+  transform: translateX(100%);
+  opacity: 0;
+}
+.slide-left-leave-to {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+.slide-right-enter-from {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+.slide-right-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
 }
 
 audio {

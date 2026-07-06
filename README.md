@@ -67,7 +67,7 @@ npm run dev
 
 - CPU: x86_64 (Intel/AMD)
 - OS: CentOS 7 (glibc 2.17)
-- go1.25.1
+- go1.26.3 linux/amd64
 
 Setup backend:
 
@@ -93,7 +93,8 @@ uberspace web backend list
 
 Setup Database
 
-The default database and user are created automatically and match the Uberspace username. The password is stored in `~/.my.cnf`.
+The default database and user are created automatically and match the Uberspace username. 
+The password is stored in `~/.my.cnf`.
 
 Show credentials:
 
@@ -162,4 +163,5 @@ npm run build
 cd api && go test ./internal/tests/... -v -count=1
 ```
 
-The tests run against SQLite in-memory, so Docker is not required. They need ffmpeg in the PATH; without ffmpeg, the relevant tests are skipped automatically.
+The tests run against SQLite in-memory, so Docker is not required. They need ffmpeg in the PATH; without ffmpeg, 
+the relevant tests are skipped automatically.

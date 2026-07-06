@@ -43,9 +43,7 @@ const app = createApp(App)
   .use(createPinia())
   .use(IonicVue, {
     // For more info, please see: https://ionicframework.com/docs/developing/config
-    // mode: 'ios',
-    // rippleEffect: false,
-    // swipeBackEnabled: false,
+    swipeBackEnabled: false,
     // IonToast content is parsed as plaintext by default. innerHTMLTemplatesEnabled enables custom HTML
     innerHTMLTemplatesEnabled: true,
   })
