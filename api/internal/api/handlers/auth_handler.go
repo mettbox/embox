@@ -107,13 +107,28 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		response.JSONError(c, http.StatusUnauthorized, "User not found", err.Error())
 		return
 	}
+
+	userID, err := uuid.Parse(user.ID)
+	if err != nil {
+		response.JSONError(c, http.StatusInternalServerError, "Invalid user ID", err.Error())
+		return
+	}
+	now := time.Now()
+	updatedUser, err := h.userService.UpdateUser(userID, dto.UpdateUserRequest{
+		LastLoginAt: &now,
+	})
+	if err != nil {
+		response.JSONError(c, http.StatusInternalServerError, "Failed to update user", err.Error())
+		return
+	}
+
 	err = h.authService.SetCookie(c, user.Email)
 	if err != nil {
 		response.JSONError(c, http.StatusInternalServerError, "Error setting cookie", err.Error())
 		return
 	}
 
-	response.JSONSuccess(c, user)
+	response.JSONSuccess(c, updatedUser)
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
